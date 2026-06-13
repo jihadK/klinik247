@@ -72,7 +72,7 @@
                 </div>
             </div>
             <div class="card-body d-flex align-items-end pt-0">
-                <i class="ki-outline ki-medical-cross fs-3hx text-gray-300"></i>
+                <i class="ki-outline ki-pulse fs-3hx text-gray-300"></i>
             </div>
         </div>
     </div>

@@ -17,7 +17,8 @@ class Site extends BaseModel
 
     protected $fillable = [
         'code', 'name', 'slug', 'address', 'city', 'phone', 'email',
-        'logo_url', 'timezone', 'settings', 'subscription_until', 'is_active',
+        'logo_url', 'kop_image_url', 'timezone', 'settings', 'subscription_until', 'is_active',
+        'letterhead_subtitle', 'letterhead_director', 'letterhead_sipb', 'letterhead_city',
     ];
 
     protected $casts = [

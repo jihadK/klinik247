@@ -1,59 +1,182 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Klinik247 — Sistem Manajemen Klinik
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web untuk **Praktek Mandiri Bidan (PMB)** dan klinik kecil — mencakup manajemen pasien, kunjungan, ANC/INC/PNC/KN, KB, imunisasi & tumbuh kembang anak, rekam medis terintegrasi, serta portal pasien self-service.
 
-## About Laravel
+[![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?logo=laravel)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?logo=php)](https://php.net)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-336791?logo=postgresql)](https://postgresql.org)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## ✨ Fitur Utama
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 🏥 Admin (Petugas Klinik)
+| Modul                   | Status | Keterangan                                                     |
+|-------------------------|:------:|----------------------------------------------------------------|
+| **Auth & RBAC**         |   ✅   | 12 tabel auth, ~70 permissions granular, 2FA, lockout 5x       |
+| **Multi-tenant (Site)** |   ✅   | Global scope `site_id`, multi-warehouse, isolasi data per klinik |
+| **Master Data**         |   ✅   | Sites, Roles, Users, Payer Types, Wilayah (Prov/Kab/Kec/Desa)  |
+| **Pasien**              |   ✅   | CRUD + cascade wilayah AJAX + auto generate No. RM `SS-YYYY-NNNNNN` |
+| **Kunjungan**           |   ✅   | 4 kategori register (Umum/ANC/KB/Anak), no_register otomatis   |
+| **KB (Akseptor)**       |   ✅   | Kartu KB, kunjungan ulang, ganti alat kontrasepsi              |
+| **ANC (Ibu Hamil)**     |   ✅   | Kartu Hamil, HPHT→HPL auto, kunjungan K1-K6, IMT, GPA          |
+| **INC (Persalinan)**    |   ✅   | Data persalinan, SOAP siklus, surat rujukan                    |
+| **PNC (Nifas)**         |   ✅   | Kunjungan nifas KF1-KF4                                        |
+| **KN (Neonatus)**       |   ✅   | Kunjungan neonatus KN1-KN3, link ke Imunisasi                  |
+| **Imunisasi**           |   ✅   | Dose tracking per jenis vaksin                                 |
+| **Tumbuh Kembang**      |   ✅   | Antropometri (BB/TB/LK), SDIDTK                                |
+| **Rekam Medis Integrated** | ✅ | Single-page view: identitas + semua riwayat                    |
+| **Apotik & Kasir**      |  🚧   | Phase 1.8 — perencanaan                                        |
 
-## Learning Laravel
+### 🌐 Portal Pasien (Public Self-Service)
+- Cari rekam medis pribadi pakai **No. RM atau NIK + Tanggal Lahir** (2-factor)
+- Rate limit 5x / 15 menit per IP, session expiry 30 menit
+- Timeline kronologis: kunjungan, kehamilan, persalinan, KB, neonatus, imunisasi
+- Material 3 design, responsive mobile-first, print-ready
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🛠 Tech Stack
 
-## Laravel Sponsors
+| Layer       | Stack                                               |
+|-------------|-----------------------------------------------------|
+| Backend     | **Laravel 12** + PHP 8.4                            |
+| Database    | **PostgreSQL 14+** (remote)                         |
+| Frontend    | Blade + Metronic 8 (admin) + Tailwind CDN (portal)  |
+| Icons       | KeenIcons (admin), Material Symbols (portal)        |
+| Fonts       | Inter + Plus Jakarta Sans                           |
+| JS Libs     | Select2, SweetAlert2, jQuery                        |
+| Session     | File driver (default), bisa switch ke Database/Redis |
+| Local Dev   | **Herd PHP** (Windows) — wajib, bukan Laragon       |
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 📂 Struktur Folder Penting
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```
+testappklnk/
+├── app/
+│   ├── Http/Controllers/
+│   │   ├── Admin/          # Controller untuk admin (auth required)
+│   │   └── Portal/         # PortalController — public self-service
+│   └── Models/             # BaseModel + 30+ model dengan global scope site
+├── database/migrations/    # Schema (multi-tenant ready)
+├── resources/views/
+│   ├── admin/              # Metronic 8 admin views
+│   └── portal/             # Material 3 portal pasien
+│       ├── layout.blade.php
+│       ├── landing.blade.php
+│       └── result.blade.php
+├── routes/web.php          # Public /portal/* + admin /admin/*
+├── public/portal/          # Logo & asset portal
+└── .env                    # Konfigurasi environment (jangan di-commit)
+```
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 🚀 Quick Start (Local Dev)
 
-## Code of Conduct
+> Prasyarat: **Herd** terinstall + PHP 8.4 + Composer + Node.js 18+
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```powershell
+# 1. Clone
+git clone https://github.com/<org>/klinik247.git
+cd klinik247
 
-## Security Vulnerabilities
+# 2. Install dependencies
+composer install
+npm install
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# 3. Setup environment
+copy .env.example .env
+& "C:\Users\<USER>\.config\herd\bin\php.bat" artisan key:generate
 
-## License
+# 4. Edit .env — sesuaikan koneksi PostgreSQL
+#    DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# 5. Migrasi & seed
+& "C:\Users\<USER>\.config\herd\bin\php.bat" artisan migrate --seed
+
+# 6. (Opsional) Build asset
+npm run build
+
+# 7. Tambahkan site Herd
+herd link testapklnk
+# Akses: http://testapklnk.test
+```
+
+### URL Penting
+- **Portal Pasien**: `http://testapklnk.test/portal`
+- **Admin Login**: `http://testapklnk.test/admin/login`
+- **Default Superadmin**: `superadmin` / `superadmin` (ganti setelah login pertama!)
+
+---
+
+## 🔐 Convention & Best Practices
+
+### Naming Tabel
+- `tbm_*` → Master (tbm_users, tbm_sites)
+- `tbr_*` → Reference (tbr_villages, tbr_payer_types)
+- `tbh_*` → Header transaksi (tbh_patient_visits, tbh_pregnancies)
+- `tbs_*` → Sub/detail transaksi (tbs_anc_visits, tbs_kb_visits)
+
+### Multi-tenant
+Semua model utama meng-`extends BaseModel` yang inject global scope `site_id = auth()->user()->site_id`. Untuk akses cross-tenant (mis. portal pasien public), pakai `Model::withoutGlobalScope('site')`.
+
+### Response Format (Dual Mode)
+Controller mendukung 2 mode response berdasarkan `$request->expectsJson()`:
+- **Web**: redirect + flash session
+- **AJAX**: JSON `{ resCode: '00', message, data }` (`00` = success, lainnya = error)
+
+### UI Convention (wajib!)
+- **SELECT** → Selalu pakai Select2 dengan `data-control="select2"` + `data-placeholder` + `data-allow-clear`
+- **Konfirmasi** → Selalu pakai `Swal.fire(...)` — **dilarang** `confirm()`, `alert()`, `prompt()` native
+
+---
+
+## 📖 Dokumentasi Tambahan
+
+| File                          | Isi                                                  |
+|-------------------------------|------------------------------------------------------|
+| [`DEPLOY.md`](DEPLOY.md)      | Panduan deploy ke server dev (Ubuntu + Nginx)         |
+| [`docs_test_phase_1_5_inc.md`](docs_test_phase_1_5_inc.md) | Test scenario Phase 1.5 INC                          |
+| `appplandoc/` (luar repo)     | Plandoc 11 file modul (Auth/Pasien/KB/ANC/INC/dst.)  |
+
+---
+
+## 🧪 Testing
+
+```powershell
+# Run all tests
+& "C:\Users\<USER>\.config\herd\bin\php.bat" artisan test
+
+# Specific suite
+& "C:\Users\<USER>\.config\herd\bin\php.bat" artisan test --filter PatientTest
+```
+
+---
+
+## 📌 Status Phase Development
+
+| Phase    | Modul                                | Status |
+|----------|--------------------------------------|:------:|
+| **0**    | Auth + Master + System               |   ✅   |
+| **1.1**  | Pasien (CRUD + cascade wilayah)      |   ✅   |
+| **1.2**  | Kunjungan + 4 kategori register      |   ✅   |
+| **1.3**  | KB (Akseptor + ganti alat)           |   ✅   |
+| **1.4**  | ANC Ibu Hamil                        |   ✅   |
+| **1.5**  | INC Persalinan + Surat Rujukan       |   ✅   |
+| **1.6**  | PNC Nifas + KN Neonatus              |   ✅   |
+| **1.7**  | Imunisasi + Tumbuh Kembang Anak      |   ✅   |
+| **1.7+** | Rekam Medis Terintegrasi             |   ✅   |
+| **1.7+** | **Customer Portal Self-Service**     |   ✅   |
+| **1.8**  | Apotik + Kasir                       |   🚧   |
+| **2.0**  | Laporan + Cetak Buku KIA             |   📋   |
+
+---
+
+## 📜 Lisensi & Kontak
+
+Proprietary — © {{ date('Y') }} Klinik247. All rights reserved.
+
+Untuk bantuan: hubungi admin sistem.
