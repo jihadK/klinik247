@@ -14,50 +14,41 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-/**
- * Deteksi apakah exception berasal dari koneksi DB yang putus
- * (server down, route to host, refused connection, timeout, dll).
- */
-function isDbConnectionLost(\Throwable $e): bool
-{
-    if (! $e instanceof QueryException && ! $e instanceof \PDOException) {
-        // Walk through chained previous exceptions to find PDO/connection error
-        $prev = $e->getPrevious();
-        while ($prev) {
-            if ($prev instanceof \PDOException) return isPdoConnectionError($prev);
-            $prev = $prev->getPrevious();
+if (! function_exists('isDbConnectionLost')) {
+    function isDbConnectionLost(\Throwable $e): bool
+    {
+        if (! $e instanceof QueryException && ! $e instanceof \PDOException) {
+            $prev = $e->getPrevious();
+            while ($prev) {
+                if ($prev instanceof \PDOException) return isPdoConnectionError($prev);
+                $prev = $prev->getPrevious();
+            }
+            return false;
+        }
+        return isPdoConnectionError($e);
+    }
+}
+
+if (! function_exists('isPdoConnectionError')) {
+    function isPdoConnectionError(\Throwable $e): bool
+    {
+        $msg = strtolower($e->getMessage());
+        $connSqlStates = ['08001', '08003', '08004', '08006', '08007', '57P03', 'HY000'];
+        foreach ($connSqlStates as $state) {
+            if (str_contains($msg, "sqlstate[$state]") || str_contains($msg, strtolower("[$state]"))) return true;
+        }
+        $needles = [
+            'no route to host', 'could not connect', 'connection refused',
+            'connection timed out', 'name or service not known',
+            'could not translate host name', 'server has gone away',
+            'lost connection', 'broken pipe', 'network is unreachable',
+            'connection reset by peer',
+        ];
+        foreach ($needles as $n) {
+            if (str_contains($msg, $n)) return true;
         }
         return false;
     }
-    return isPdoConnectionError($e);
-}
-
-function isPdoConnectionError(\Throwable $e): bool
-{
-    $msg = strtolower($e->getMessage());
-    $code = $e->getCode();
-    // SQLSTATE: 08001/08006/08003/08004/08007/57P03 → connection problems
-    $connSqlStates = ['08001', '08003', '08004', '08006', '08007', '57P03', 'HY000'];
-    foreach ($connSqlStates as $state) {
-        if (str_contains($msg, "sqlstate[$state]") || str_contains($msg, strtolower("[$state]"))) return true;
-    }
-    $needles = [
-        'no route to host',
-        'could not connect',
-        'connection refused',
-        'connection timed out',
-        'name or service not known',
-        'could not translate host name',
-        'server has gone away',
-        'lost connection',
-        'broken pipe',
-        'network is unreachable',
-        'connection reset by peer',
-    ];
-    foreach ($needles as $n) {
-        if (str_contains($msg, $n)) return true;
-    }
-    return false;
 }
 
 return Application::configure(basePath: dirname(__DIR__))

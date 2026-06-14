@@ -1,131 +1,79 @@
-# 🚀 Panduan Deploy — Klinik247 ke Server Dev
+# 🚀 Panduan Deploy — Klinik247 ke `kamilsrv1`
 
-Panduan step-by-step deploy aplikasi Klinik247 ke server dev Linux (Ubuntu 22.04 / Debian 12) dengan stack **Nginx + PHP-FPM 8.4 + PostgreSQL remote**.
+Deploy Klinik247 **side-by-side** dengan fishstock yang sudah jalan di `/var/www/pesisirfreshfish`. Stack sudah tersedia (Nginx 1.18 Ubuntu + PHP-FPM + Composer + Git), jadi langkah deploy fokus pada **clone repo baru, vhost Nginx baru, dan symlink**.
 
-> **Catatan**: Stack mengikuti pola yang sama dengan aplikasi `fishstock` (testapp) yang sudah berjalan di server.
-
----
-
-## 📋 Asumsi & Prasyarat
-
-- ✅ Server dev sudah tersedia, akses SSH root/sudo
-- ✅ Domain / subdomain sudah pointing ke IP server (mis. `klinik247-dev.domain.com`)
-- ✅ GitHub repo sudah siap (private repo: `git@github.com:<org>/klinik247.git`)
-- ✅ Database PostgreSQL remote sudah jalan di `103.93.162.70:5432/klinik`
-- ✅ Akses SSH key sudah didaftarkan (`~/.ssh/authorized_keys`)
+> **Asumsi**: Anda sudah punya SSH access ke `root@kamilsrv1`. Database tetap PostgreSQL remote `103.93.162.70:5432/klinik`.
 
 ---
 
-## 🗺 Arsitektur Deploy
+## 🗂 Layout Server (Setelah Deploy)
 
 ```
-┌─────────────────┐         HTTPS         ┌────────────────────────┐
-│  Browser User   │ ───────────────────▶ │  Server Dev Ubuntu     │
-└─────────────────┘                       │  ┌──────────────────┐  │
-                                          │  │ Nginx :443       │  │
-                                          │  └────────┬─────────┘  │
-                                          │           │ FastCGI    │
-                                          │  ┌────────▼─────────┐  │
-                                          │  │ PHP-FPM 8.4      │  │
-                                          │  └────────┬─────────┘  │
-                                          │           │            │
-                                          │  /var/www/klinik247/   │
-                                          │  ├─ public/  ◀ webroot │
-                                          │  ├─ storage/ (writable)│
-                                          │  └─ bootstrap/cache/   │
-                                          └───────────┼────────────┘
-                                                      │ pgsql ext
-                                                      ▼
-                                         ┌──────────────────────┐
-                                         │ PostgreSQL Remote    │
-                                         │ 103.93.162.70:5432   │
-                                         │ Database: klinik     │
-                                         └──────────────────────┘
+/var/www/
+├── pesisirfreshfish/         # ✅ Fishstock (existing, jangan disentuh)
+└── klinik247/                # 🆕 Klinik247 (target deploy)
+    ├── public/               # Webroot Nginx → /klinik247/public
+    ├── storage/
+    └── .env
+
+/etc/nginx/sites-available/
+├── pesisirfreshfish          # ✅ Existing
+└── klinik247                 # 🆕 Baru
 ```
 
 ---
 
-## 1️⃣ Persiapan Server (sekali saja)
+## 0️⃣ Cek Stack Server (sekali, opsional)
 
-SSH ke server:
-
+SSH dulu:
 ```bash
-ssh root@<IP-SERVER-DEV>
+ssh root@kamilsrv1
 ```
 
-### 1.1 Update sistem
+Cek versi PHP yang dipakai fishstock:
 ```bash
-apt update && apt upgrade -y
-```
-
-### 1.2 Install PHP 8.4 + ekstensi yang dibutuhkan Laravel + PostgreSQL
-```bash
-# Tambah repo PHP
-add-apt-repository ppa:ondrej/php -y
-apt update
-
-# Install PHP 8.4 + ekstensi
-apt install -y php8.4 php8.4-fpm php8.4-cli \
-    php8.4-pgsql php8.4-mbstring php8.4-xml php8.4-bcmath \
-    php8.4-curl php8.4-zip php8.4-gd php8.4-intl php8.4-readline \
-    php8.4-tokenizer php8.4-fileinfo
-
-# Verifikasi
 php -v
-php -m | grep -iE 'pgsql|mbstring|xml|bcmath|curl|gd'
+php -m | grep -iE 'pgsql|mbstring|xml|bcmath|gd|curl|zip'
+
+# Cek socket PHP-FPM yang aktif
+ls /var/run/php/
 ```
 
-### 1.3 Install Composer
-```bash
-curl -sS https://getcomposer.org/installer | php
-mv composer.phar /usr/local/bin/composer
-composer --version
-```
+> **Catatan PHP**: Klinik247 dikembangkan dengan **PHP 8.4** (Herd). Kalau server pakai 8.2/8.3, biasanya masih kompatibel — tinggal pastikan `composer install` lolos. Kalau error, install PHP 8.4 pakai `ppa:ondrej/php`:
+>
+> ```bash
+> add-apt-repository ppa:ondrej/php -y && apt update
+> apt install -y php8.4 php8.4-fpm php8.4-cli php8.4-pgsql \
+>     php8.4-mbstring php8.4-xml php8.4-bcmath php8.4-curl \
+>     php8.4-zip php8.4-gd php8.4-intl php8.4-readline php8.4-fileinfo
+> systemctl enable --now php8.4-fpm
+> ```
 
-### 1.4 Install Node.js 20 LTS (untuk Vite build asset)
-```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt install -y nodejs
-node -v && npm -v
-```
-
-### 1.5 Install Nginx
-```bash
-apt install -y nginx
-systemctl enable --now nginx
-```
-
-### 1.6 Install Git + PostgreSQL client (untuk test koneksi)
-```bash
-apt install -y git postgresql-client
-```
-
-### 1.7 Test koneksi ke PostgreSQL remote
+Test koneksi ke DB remote (sekali aja):
 ```bash
 PGPASSWORD='klinik!' psql -h 103.93.162.70 -p 5432 -U klinik_app -d klinik -c "SELECT version();"
 ```
-Kalau output muncul versi PostgreSQL → ✅ koneksi OK. Kalau error timeout → cek firewall server DB.
 
 ---
 
-## 2️⃣ Setup SSH Key untuk GitHub Pull
+## 1️⃣ Setup SSH Deploy Key (sekali)
 
-Server perlu bisa pull repo dari GitHub. Generate deploy key:
+Kalau belum ada deploy key untuk repo Klinik247:
 
 ```bash
-# Generate key tanpa passphrase
-ssh-keygen -t ed25519 -C "klinik247-deploy" -f ~/.ssh/klinik247_deploy -N ""
+# Generate key khusus untuk klinik247
+ssh-keygen -t ed25519 -C "klinik247-deploy@kamilsrv1" \
+    -f ~/.ssh/klinik247_deploy -N ""
 
-# Tampilkan public key
 cat ~/.ssh/klinik247_deploy.pub
 ```
 
-Copy output `.pub` itu → **GitHub repo → Settings → Deploy keys → Add deploy key**. Beri nama `dev-server`, paste, biarkan **read-only** centang.
+Copy output → **GitHub repo Klinik247 → Settings → Deploy keys → Add deploy key** (nama: `kamilsrv1-dev`, biarkan **read-only**).
 
-Konfigurasi SSH alias supaya tahu pakai key mana:
-
+Konfigurasi alias SSH:
 ```bash
 cat >> ~/.ssh/config <<'EOF'
+
 Host github-klinik247
     HostName github.com
     User git
@@ -133,63 +81,58 @@ Host github-klinik247
     StrictHostKeyChecking accept-new
 EOF
 chmod 600 ~/.ssh/config
-```
 
-Test:
-```bash
+# Test
 ssh -T github-klinik247
-# Output: "Hi <user>! You've successfully authenticated..."
 ```
 
 ---
 
-## 3️⃣ Clone & Setup Project
+## 2️⃣ Clone Repo
 
-### 3.1 Buat user www-data sebagai owner (opsional tapi recommended)
 ```bash
-mkdir -p /var/www
 cd /var/www
-```
-
-### 3.2 Clone repo
-```bash
-git clone github-klinik247:<org>/klinik247.git
+git clone github-klinik247:jihadK/klinik247.git klinik247
 cd klinik247
 ```
 
-### 3.3 Install dependencies (production mode)
+> Repo: https://github.com/jihadK/klinik247
+> Pakai SSH alias (`github-klinik247`) yang sudah dikonfigurasi di langkah 1️⃣ supaya pull pakai deploy key. Hindari clone HTTPS biar tidak perlu masuk-keluar password tiap kali pull.
+
+---
+
+## 3️⃣ Install Dependencies & Setup `.env`
+
 ```bash
+cd /var/www/klinik247
+
+# Composer
 composer install --no-dev --optimize-autoloader --no-interaction
-npm ci
-npm run build
-```
 
-> **Catatan**: kalau Vite tidak dipakai (portal pakai Tailwind CDN), `npm run build` boleh di-skip — cek `vite.config.js` dulu.
+# Node (cuma kalau perlu build asset Vite; portal pakai Tailwind CDN, jadi opsional)
+# npm ci && npm run build
 
-### 3.4 Setup `.env`
-```bash
+# Env
 cp .env.example .env
 nano .env
 ```
 
-Isi minimal:
+Isi `.env` minimal:
 ```dotenv
 APP_NAME="Klinik247"
 APP_ENV=dev
 APP_KEY=
 APP_DEBUG=false
-APP_URL=https://klinik247-dev.domain.com
+APP_URL=https://klinik247.net
 
 APP_LOCALE=id
-APP_FALLBACK_LOCALE=en
-APP_FAKER_LOCALE=id_ID
 APP_TIMEZONE=Asia/Jakarta
 
 LOG_CHANNEL=stack
 LOG_STACK=daily
 LOG_LEVEL=warning
 
-# === PostgreSQL Remote (sama dengan local) ===
+# === PostgreSQL Remote ===
 DB_CONNECTION=pgsql
 DB_HOST=103.93.162.70
 DB_PORT=5432
@@ -202,35 +145,24 @@ SESSION_DRIVER=file
 SESSION_LIFETIME=120
 SESSION_ENCRYPT=true
 SESSION_SECURE_COOKIE=true
-SESSION_PATH=/
 SESSION_HTTP_ONLY=true
 SESSION_SAME_SITE=lax
 
 CACHE_STORE=file
 QUEUE_CONNECTION=sync
-FILESYSTEM_DISK=local
 ```
 
-### 3.5 Generate APP_KEY
+Generate key + cache + storage link:
 ```bash
 php artisan key:generate
-```
-
-### 3.6 (PENTING) Cek migrasi — biasanya SKIP di server dev kalau DB sama dgn local
-```bash
-# Kalau ini server pertama yang konek DB remote → run migrate
-# Kalau DB sudah lengkap (kasus pakai DB local dev) → CUKUP migrate:status saja
-php artisan migrate:status
-```
-
-### 3.7 Optimize & cache
-```bash
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache
-# Storage symlink (untuk akses public/storage)
 php artisan storage:link
+
+# Cek migration (skip kalau DB sudah lengkap dari local dev)
+php artisan migrate:status
 ```
 
 ---
@@ -238,31 +170,44 @@ php artisan storage:link
 ## 4️⃣ Set Permissions
 
 ```bash
-# Owner = www-data (user PHP-FPM)
-chown -R www-data:www-data /var/www/klinik247
-
-# Folder yang HARUS writable
-chmod -R 775 /var/www/klinik247/storage
-chmod -R 775 /var/www/klinik247/bootstrap/cache
+cd /var/www/klinik247
+chown -R www-data:www-data .
+chmod -R 775 storage bootstrap/cache
 ```
 
 ---
 
-## 5️⃣ Konfigurasi Nginx
+## 5️⃣ Upload Logo Portal (dari local)
+
+Logo Klinik247 disimpan di `public/portal/logo-klinik247.png`. Upload dari mesin local PowerShell:
+
+```powershell
+scp "D:\FILE\KAMIL\PROJECT\php\testappklnk\public\portal\logo-klinik247.png" `
+    root@kamilsrv1:/var/www/klinik247/public/portal/
+```
+
+Lalu di server:
+```bash
+chown www-data:www-data /var/www/klinik247/public/portal/logo-klinik247.png
+```
+
+> Kalau file ini belum diupload, portal otomatis fallback ke icon `medical_services` Material — masih tampil rapi, tidak broken.
+
+---
+
+## 6️⃣ Nginx Vhost Baru (Side-by-Side dengan Fishstock)
 
 ```bash
 nano /etc/nginx/sites-available/klinik247
 ```
 
-Isi:
+Isi (sesuaikan `server_name` dan **`fastcgi_pass` mengikuti fishstock**):
+
 ```nginx
 server {
     listen 80;
     listen [::]:80;
-    server_name klinik247-dev.domain.com;
-
-    # Redirect HTTP → HTTPS (setelah SSL aktif)
-    # return 301 https://$server_name$request_uri;
+    server_name klinik247.net;
 
     root /var/www/klinik247/public;
     index index.php index.html;
@@ -270,11 +215,10 @@ server {
     charset utf-8;
     client_max_body_size 20M;
 
-    # Logging
     access_log /var/log/nginx/klinik247_access.log;
     error_log  /var/log/nginx/klinik247_error.log warn;
 
-    # Security headers (sesuai catatan pentest)
+    # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
@@ -285,7 +229,7 @@ server {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
-    # Cache static assets
+    # Cache static
     location ~* \.(jpg|jpeg|png|gif|ico|css|js|woff2?|svg)$ {
         expires 30d;
         add_header Cache-Control "public, immutable";
@@ -293,6 +237,8 @@ server {
     }
 
     location ~ \.php$ {
+        # PENTING: samakan dengan socket di /etc/nginx/sites-available/pesisirfreshfish
+        # cek: grep fastcgi_pass /etc/nginx/sites-available/pesisirfreshfish
         fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
@@ -300,11 +246,16 @@ server {
         fastcgi_read_timeout 60;
     }
 
-    # Block akses ke file sensitive
+    # Block file sensitif
     location ~ /\.(?!well-known).* { deny all; }
     location ~* \.(env|log|md|json|lock|sql)$ { deny all; }
 }
 ```
+
+> 💡 **Tip**: Kalau fishstock pakai `php8.3-fpm.sock` atau lainnya, GANTI baris `fastcgi_pass` di atas supaya sama persis. Cek dengan:
+> ```bash
+> grep -h fastcgi_pass /etc/nginx/sites-available/pesisirfreshfish
+> ```
 
 Aktifkan + test + reload:
 ```bash
@@ -315,28 +266,23 @@ systemctl reload nginx
 
 ---
 
-## 6️⃣ SSL dengan Let's Encrypt
+## 7️⃣ SSL dengan Let's Encrypt
+
+Certbot biasanya sudah terinstall (dipakai fishstock). Tinggal:
 
 ```bash
-apt install -y certbot python3-certbot-nginx
-certbot --nginx -d klinik247-dev.domain.com --agree-tos -m admin@domain.com --redirect
-
-# Auto-renew sudah aktif via systemd timer
-systemctl status certbot.timer
+certbot --nginx -d klinik247.net --agree-tos --redirect -n
 ```
 
-Uncomment baris redirect HTTP→HTTPS di `/etc/nginx/sites-available/klinik247` kalau Certbot belum auto-handle.
-
----
-
-## 7️⃣ Symbolic Link untuk Logo Portal
-
-Logo Klinik247 perlu disimpan di `public/portal/logo-klinik247.png`. Upload dari local:
-
+Kalau belum:
 ```bash
-# Di mesin local PowerShell:
-scp "D:\FILE\KAMIL\PROJECT\php\testappklnk\public\portal\logo-klinik247.png" \
-    root@<IP-SERVER>:/var/www/klinik247/public/portal/
+apt install -y certbot python3-certbot-nginx
+```
+
+Verifikasi auto-renew:
+```bash
+systemctl status certbot.timer
+certbot renew --dry-run
 ```
 
 ---
@@ -344,109 +290,101 @@ scp "D:\FILE\KAMIL\PROJECT\php\testappklnk\public\portal\logo-klinik247.png" \
 ## 8️⃣ Smoke Test
 
 ```bash
-# 1. Cek route terdaftar
 cd /var/www/klinik247
+
+# Routes
 php artisan route:list --path=portal
-php artisan route:list --path=admin
+php artisan route:list --path=admin/login
 
-# 2. Test homepage (otomatis redirect ke /portal)
-curl -sI https://klinik247-dev.domain.com/ | head -5
-
-# 3. Test portal landing
-curl -s https://klinik247-dev.domain.com/portal | grep -i "Portal Pasien"
-
-# 4. Test admin login page
-curl -sI https://klinik247-dev.domain.com/admin/login | head -3
+# HTTP check
+curl -sI https://klinik247.net/ | head -3
+curl -s  https://klinik247.net/portal | grep -o "Portal Pasien" | head -1
 ```
 
-Buka di browser:
-- 🌐 `https://klinik247-dev.domain.com/portal` — Portal Pasien (public)
-- 🔐 `https://klinik247-dev.domain.com/admin/login` — Admin Login
+Buka browser:
+- 🌐 `https://klinik247.net/portal` — Portal Pasien (public)
+- 🔐 `https://klinik247.net/admin/login` — Login petugas
 
 ---
 
-## 🔄 Workflow Update Berikutnya (Pull Latest)
+## 🔄 Workflow Update Berikutnya
 
-Setelah deploy awal, untuk update kode berikutnya cukup:
+Sama gaya seperti fishstock — masuk ke folder lalu pull:
 
 ```bash
 cd /var/www/klinik247
 
-# 1. Maintenance mode (optional)
+# Maintenance mode (opsional)
 php artisan down
 
-# 2. Pull
 git pull origin main
 
-# 3. Update dependencies
 composer install --no-dev --optimize-autoloader --no-interaction
-npm ci && npm run build   # kalau ada perubahan asset
+# kalau ada perubahan asset Vite: npm ci && npm run build
 
-# 4. Migrasi DB (kalau ada migration baru)
 php artisan migrate --force
 
-# 5. Clear & rebuild cache
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# 6. Permissions
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 
-# 7. Restart PHP-FPM (clear opcache)
+# Reload PHP-FPM (clear opcache) — sesuaikan versi
 systemctl reload php8.4-fpm
 
-# 8. Up lagi
 php artisan up
 ```
 
-### 🤖 Auto-Deploy Script (Opsional)
+### Skrip Otomatis
 
-Simpan di `/usr/local/bin/deploy-klinik247.sh`:
+Simpan sekali, pakai berkali-kali:
 
 ```bash
+cat > /usr/local/bin/deploy-klinik247.sh <<'EOF'
 #!/bin/bash
 set -e
-cd /var/www/klinik247
-echo "🔄 Pulling latest..."
-sudo -u www-data git pull origin main
-echo "📦 Installing dependencies..."
-sudo -u www-data composer install --no-dev --optimize-autoloader --no-interaction
-echo "🏗  Building assets..."
-sudo -u www-data npm ci && sudo -u www-data npm run build
-echo "🗄  Migrating..."
-sudo -u www-data php artisan migrate --force
-echo "♻️  Caching..."
-sudo -u www-data php artisan config:cache
-sudo -u www-data php artisan route:cache
-sudo -u www-data php artisan view:cache
-echo "🔁 Reloading PHP-FPM..."
-systemctl reload php8.4-fpm
+APP=/var/www/klinik247
+PHP_FPM=php8.4-fpm   # sesuaikan kalau versi beda
+echo "🔄 Pull latest..."
+cd $APP && git pull origin main
+echo "📦 composer..."
+composer install --no-dev --optimize-autoloader --no-interaction
+echo "🗄  migrate..."
+php artisan migrate --force
+echo "♻️  cache..."
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+echo "🔐 perms..."
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+echo "🔁 reload php-fpm..."
+systemctl reload $PHP_FPM
 echo "✅ Done."
-```
-
-```bash
+EOF
 chmod +x /usr/local/bin/deploy-klinik247.sh
-# Pakai: sudo deploy-klinik247.sh
+
+# Pakai:
+sudo deploy-klinik247.sh
 ```
 
 ---
 
 ## 🐛 Troubleshooting
 
-| Gejala                                          | Solusi                                                    |
-|-------------------------------------------------|-----------------------------------------------------------|
-| `500 Internal Server Error` (blank page)        | Cek `storage/logs/laravel-*.log`. Biasanya permission `storage/` belum 775. |
-| `SQLSTATE[08006] connection refused`            | Firewall server DB belum buka port 5432 untuk IP server dev. |
-| `Class "PDO" not found`                         | Ekstensi `php8.4-pgsql` belum terinstall — `apt install php8.4-pgsql && systemctl reload php8.4-fpm` |
-| `Permission denied` saat `php artisan ...`      | `chown -R www-data:www-data .` lalu jalankan dengan `sudo -u www-data php artisan ...` |
-| Logo portal tidak muncul                        | File `public/portal/logo-klinik247.png` belum di-upload. Fallback ke icon `medical_services` otomatis. |
-| CSS portal kelihatan rusak                      | Portal pakai Tailwind CDN — pastikan server bisa akses internet outbound. |
-| `419 Page Expired` saat login                   | `SESSION_DRIVER=file` butuh folder `storage/framework/sessions` writable. |
-| Setelah update kode, browser tetap pakai cache lama | `php artisan view:clear && view:cache`, tambahkan `?v=2` di link asset, dan `systemctl reload php8.4-fpm` |
+| Gejala                                            | Solusi                                                                              |
+|---------------------------------------------------|-------------------------------------------------------------------------------------|
+| **502 Bad Gateway**                               | `fastcgi_pass` salah socket. Cek `ls /var/run/php/*.sock` lalu update vhost.        |
+| **500 blank page**                                | `tail -f storage/logs/laravel.log` — biasanya permission `storage/` belum 775       |
+| `SQLSTATE[08006] connection refused`              | Firewall server DB belum izinkan IP `kamilsrv1`. Hubungi admin DB.                  |
+| `Class "PDO" not found`                           | Ekstensi `phpX.Y-pgsql` belum ada. `apt install phpX.Y-pgsql && systemctl reload phpX.Y-fpm` |
+| Logo portal tidak muncul                          | File belum diupload di `public/portal/logo-klinik247.png` — fallback icon tetap aktif |
+| CSS portal rusak                                  | Portal pakai Tailwind CDN, butuh internet outbound. Cek `curl https://cdn.tailwindcss.com -I` |
+| `419 Page Expired` saat login                     | `chmod -R 775 storage/framework/sessions`                                            |
+| Setelah `git pull`, browser tetap UI lama         | `php artisan view:clear && view:cache` + `systemctl reload phpX.Y-fpm`              |
+| Konflik dengan vhost fishstock                    | Pastikan `server_name` berbeda. Cek `nginx -T \| grep server_name`                   |
 
-### Cek log realtime
+### Log realtime
 ```bash
 tail -f /var/www/klinik247/storage/logs/laravel.log
 tail -f /var/log/nginx/klinik247_error.log
@@ -455,34 +393,35 @@ journalctl -u php8.4-fpm -f
 
 ---
 
-## 🔒 Catatan Keamanan Production
+## ✅ Checklist Production-Readiness
 
-Sebelum ekspos ke publik:
+Sebelum dipakai user real / ekspos publik:
 
 - [ ] `APP_DEBUG=false` di `.env`
-- [ ] `APP_ENV=production` (atau `dev` untuk staging)
-- [ ] SSL aktif + HSTS header
-- [ ] Ganti password default `superadmin` setelah login pertama
-- [ ] `SESSION_SECURE_COOKIE=true` (cuma HTTPS)
-- [ ] `SESSION_HTTP_ONLY=true` (block JS akses cookie)
-- [ ] Rate limit Nginx tambahan untuk `/admin/login` dan `/portal/search`:
+- [ ] SSL aktif (HTTPS redirect)
+- [ ] **Ganti password `superadmin`** setelah login pertama
+- [ ] `SESSION_SECURE_COOKIE=true` + `SESSION_HTTP_ONLY=true`
+- [ ] Rate limit Nginx tambahan (di `/etc/nginx/nginx.conf` block `http`):
   ```nginx
-  # Di http context /etc/nginx/nginx.conf
-  limit_req_zone $binary_remote_addr zone=login:10m rate=10r/m;
-  # Di location /admin/login dan /portal/search
-  limit_req zone=login burst=5 nodelay;
+  limit_req_zone $binary_remote_addr zone=auth:10m rate=10r/m;
   ```
-- [ ] Backup DB schedule (cron `pg_dump`) walaupun DB remote
+  Lalu di vhost `klinik247`:
+  ```nginx
+  location = /admin/login    { limit_req zone=auth burst=5 nodelay; try_files $uri /index.php?$query_string; }
+  location = /portal/search  { limit_req zone=auth burst=3 nodelay; try_files $uri /index.php?$query_string; }
+  ```
+- [ ] Backup DB schedule (cron `pg_dump` di server DB)
 - [ ] Monitoring uptime (UptimeRobot / Better Stack)
+- [ ] Tambahkan `.env` ke `.gitignore` (default Laravel sudah ✓ — verify dengan `git status`)
 
 ---
 
 ## 📞 Kontak
 
-- **Pemilik klinik**: Bu Tin — Pondok Bersalin Lamongan
-- **Dev/maintenance**: hubungi admin sistem
-- **Repo**: `github.com/<org>/klinik247`
+- Server: `root@kamilsrv1`
+- App fishstock (existing): `/var/www/pesisirfreshfish`
+- App klinik247 (baru): `/var/www/klinik247`
+- DB remote: `103.93.162.70:5432/klinik`
+- Repo: https://github.com/jihadK/klinik247
 
----
-
-🎉 **Selamat! Klinik247 siap digunakan di server dev.**
+🎉 **Selamat! Klinik247 siap jalan side-by-side dengan fishstock di `kamilsrv1`.**

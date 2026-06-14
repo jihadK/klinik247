@@ -80,7 +80,7 @@ testappklnk/
 
 ```powershell
 # 1. Clone
-git clone https://github.com/<org>/klinik247.git
+git clone https://github.com/jihadK/klinik247.git
 cd klinik247
 
 # 2. Install dependencies
@@ -138,7 +138,8 @@ Controller mendukung 2 mode response berdasarkan `$request->expectsJson()`:
 
 | File                          | Isi                                                  |
 |-------------------------------|------------------------------------------------------|
-| [`DEPLOY.md`](DEPLOY.md)      | Panduan deploy ke server dev (Ubuntu + Nginx)         |
+| [`DEPLOY.md`](DEPLOY.md)            | Panduan deploy ke server dev (referensi umum)            |
+| [`DEPLOY_STEPS.md`](DEPLOY_STEPS.md) | **Step-by-step detail** deploy ke `kamilsrv1` tanpa ganggu fishstock |
 | [`docs_test_phase_1_5_inc.md`](docs_test_phase_1_5_inc.md) | Test scenario Phase 1.5 INC                          |
 | `appplandoc/` (luar repo)     | Plandoc 11 file modul (Auth/Pasien/KB/ANC/INC/dst.)  |
 
@@ -179,4 +180,5 @@ Controller mendukung 2 mode response berdasarkan `$request->expectsJson()`:
 
 Proprietary — © {{ date('Y') }} Klinik247. All rights reserved.
 
-Untuk bantuan: hubungi admin sistem.
+- Repo: https://github.com/jihadK/klinik247
+- Untuk bantuan: hubungi admin sistem.
