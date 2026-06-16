@@ -3,7 +3,19 @@
 @section('page_title', 'Pengaturan Klinik — '.$site->name)
 
 @section('content')
-<form action="{{ route('admin.sites.update', $site) }}" method="POST" enctype="multipart/form-data">
+
+@if ($errors->any())
+    <div class="alert alert-danger d-flex flex-column mb-5">
+        <h5 class="fw-bold mb-2"><i class="ki-outline ki-information-2 fs-2 me-2"></i>Periksa form berikut:</h5>
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<form action="{{ route('admin.sites.update', $site) }}" method="POST" enctype="multipart/form-data" id="kt_site_form">
     @csrf @method('PUT')
 
     <div class="row">
@@ -89,12 +101,18 @@
             <div class="card mb-5">
                 <div class="card-header"><h3 class="card-title">🖼 Logo Klinik</h3></div>
                 <div class="card-body text-center">
-                    @if($site->logo_url)
+                    @php $logoExists = $site->logo_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($site->logo_url); @endphp
+                    @if($logoExists)
                         <img src="{{ asset('storage/'.$site->logo_url) }}" alt="logo" style="max-height:150px; max-width:100%; object-fit:contain;" class="mb-3">
                         <form action="{{ route('admin.sites.logo.destroy', $site) }}" method="POST" class="d-inline form-del-asset">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-light-danger w-100 mb-3"><i class="ki-outline ki-trash fs-3"></i> Hapus Logo</button>
                         </form>
+                    @elseif($site->logo_url)
+                        <div class="alert alert-warning fs-8 py-2 mb-3">
+                            <i class="ki-outline ki-information-2 fs-3 me-1"></i>
+                            File logo tidak ditemukan di server. Upload ulang di bawah.
+                        </div>
                     @else
                         <div class="text-muted py-5">Belum ada logo</div>
                     @endif
@@ -107,12 +125,18 @@
             <div class="card mb-5 border border-primary">
                 <div class="card-header bg-light-primary"><h3 class="card-title text-primary">📄 Kop Surat (Image)</h3></div>
                 <div class="card-body text-center">
-                    @if($site->kop_image_url)
+                    @php $kopExists = $site->kop_image_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($site->kop_image_url); @endphp
+                    @if($kopExists)
                         <img src="{{ asset('storage/'.$site->kop_image_url) }}" alt="kop" style="max-width:100%; object-fit:contain;" class="border mb-3">
                         <form action="{{ route('admin.sites.kop.destroy', $site) }}" method="POST" class="d-inline form-del-asset">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-light-danger w-100 mb-3"><i class="ki-outline ki-trash fs-3"></i> Hapus Kop</button>
                         </form>
+                    @elseif($site->kop_image_url)
+                        <div class="alert alert-warning fs-8 py-2 mb-3">
+                            <i class="ki-outline ki-information-2 fs-3 me-1"></i>
+                            File kop surat tidak ditemukan di server. Upload ulang di bawah.
+                        </div>
                     @else
                         <div class="text-muted py-5">Belum upload kop surat</div>
                     @endif

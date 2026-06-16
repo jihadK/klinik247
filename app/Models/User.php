@@ -69,9 +69,12 @@ class User extends Authenticatable implements AuthenticatableContract
 
     /* ========== Helpers ========== */
 
-    /** Cek permission via PG function fn_user_has_permission() */
+    /** Cek permission via PG function fn_user_has_permission() — super admin bypass */
     public function hasPermission(string $permission): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
         $result = DB::selectOne(
             'SELECT fn_user_has_permission(?, ?) AS has_perm',
             [$this->id, $permission]
