@@ -9,7 +9,8 @@
     {{-- Brand --}}
     <div class="aside-logo flex-column-auto" id="kt_aside_logo">
         <a href="{{ route('admin.dashboard') }}" class="d-flex align-items-center">
-            <span class="fs-2 fw-bolder text-white">Klinik247</span>
+            <img src="{{ asset('assets/logo/logo-klinik-247-h.png') }}" alt="Klinik247"
+                 style="max-height: 40px; width: auto; filter: brightness(0) invert(1);">
         </a>
         <div id="kt_aside_toggle"
              class="btn btn-icon w-auto px-0 btn-active-color-primary aside-toggle me-n2"

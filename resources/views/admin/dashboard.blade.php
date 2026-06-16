@@ -4,71 +4,28 @@
 @section('page_title', 'Dashboard')
 
 @section('content')
-@php
-    $user = $currentUser ?? auth()->user();
-    $initial = strtoupper(mb_substr($user->full_name, 0, 1));
-@endphp
 
-{{-- Welcome Card --}}
-<div class="card mb-5 mb-xl-10">
-    <div class="card-body pt-9 pb-0">
-        <div class="d-flex flex-wrap flex-sm-nowrap mb-3">
-            <div class="me-7 mb-4">
-                <div class="symbol symbol-100px symbol-lg-160px symbol-fixed position-relative">
-                    <div class="symbol-label fs-1 bg-light-primary text-primary fw-bold">{{ $initial }}</div>
-                    <div class="position-absolute translate-middle bottom-0 start-100 mb-6 bg-success rounded-circle border border-4 border-white h-20px w-20px"></div>
-                </div>
-            </div>
-            <div class="flex-grow-1">
-                <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
-                    <div class="d-flex flex-column">
-                        <div class="d-flex align-items-center mb-2">
-                            <span class="text-gray-900 fs-2 fw-bold me-2">{{ $user->full_name }}</span>
-                            <span class="badge badge-light-success me-1">{{ ucfirst($user->role->name ?? '—') }}</span>
-                            @if($isSuper)
-                                <span class="badge badge-light-danger ms-1"><i class="ki-outline ki-shield-tick"></i> Super Admin</span>
-                            @else
-                                <span class="badge badge-light-info ms-1"><i class="ki-outline ki-shop"></i> {{ $currentSite?->name }}</span>
-                            @endif
-                        </div>
-                        <div class="d-flex flex-wrap fw-semibold fs-6 mb-4 pe-2">
-                            <span class="d-flex align-items-center text-gray-500 me-5 mb-2">
-                                <i class="ki-outline ki-profile-circle fs-4 me-1"></i>{{ $user->username }}
-                            </span>
-                            <span class="d-flex align-items-center text-gray-500 me-5 mb-2">
-                                <i class="ki-outline ki-sms fs-4 me-1"></i>{{ $user->email ?? '—' }}
-                            </span>
-                            @if($user->phone)
-                                <span class="d-flex align-items-center text-gray-500 mb-2">
-                                    <i class="ki-outline ki-phone fs-4 me-1"></i>{{ $user->phone }}
-                                </span>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- 4 Stat Cards --}}
+{{-- ===== 4 Stat Cards ===== --}}
 <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
-    <div class="col-md-6 col-lg-3">
-        <div class="card card-flush h-md-100" style="background-color: #1e88e5; background-image: url({{ asset('assets/media/patterns/vector-1.png') }})">
+    <div class="col-6 col-lg-3">
+        <div class="card card-flush h-100" style="background-color: #1e88e5; background-image: url({{ asset('assets/media/patterns/vector-1.png') }})">
             <div class="card-header pt-5">
                 <div class="card-title d-flex flex-column">
                     <span class="fs-2hx fw-bold text-white me-2 lh-1 ls-n2">{{ number_format($stats['patients']) }}</span>
                     <span class="text-white opacity-75 pt-1 fw-semibold fs-6">Total Pasien</span>
                 </div>
             </div>
+            <div class="card-body d-flex align-items-end pt-0">
+                <i class="ki-outline ki-people fs-3hx text-white opacity-50"></i>
+            </div>
         </div>
     </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card card-flush h-md-100">
+    <div class="col-6 col-lg-3">
+        <div class="card card-flush h-100">
             <div class="card-header pt-5">
                 <div class="card-title d-flex flex-column">
                     <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ number_format($stats['doctors']) }}</span>
-                    <span class="text-gray-500 pt-1 fw-semibold fs-6">Total Dokter</span>
+                    <span class="text-gray-500 pt-1 fw-semibold fs-6">Dokter / Bidan</span>
                 </div>
             </div>
             <div class="card-body d-flex align-items-end pt-0">
@@ -76,8 +33,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card card-flush h-md-100">
+    <div class="col-6 col-lg-3">
+        <div class="card card-flush h-100">
             <div class="card-header pt-5">
                 <div class="card-title d-flex flex-column">
                     <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ number_format($stats['services']) }}</span>
@@ -89,8 +46,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-lg-3">
-        <div class="card card-flush h-md-100">
+    <div class="col-6 col-lg-3">
+        <div class="card card-flush h-100">
             <div class="card-header pt-5">
                 <div class="card-title d-flex flex-column">
                     <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ number_format($stats['medicines']) }}</span>
@@ -104,134 +61,210 @@
     </div>
 </div>
 
+{{-- ===== ANTRIAN HARI INI + JADWAL KUNJUNGAN ULANG ===== --}}
 <div class="row g-5">
-    {{-- Super admin only: list semua klinik --}}
-    @if($isSuper)
-        <div class="col-xl-5">
-            <div class="card h-100">
-                <div class="card-header pt-7">
-                    <h3 class="card-title align-items-start flex-column">
-                        <span class="card-label fw-bold text-gray-800">Daftar Klinik</span>
-                        <span class="text-gray-500 mt-1 fw-semibold fs-6">{{ $sites->count() }} klinik terdaftar</span>
-                    </h3>
+
+    {{-- ===== Antrian Kunjungan Hari Ini ===== --}}
+    <div class="col-xl-5">
+        <div class="card h-100">
+            <div class="card-header pt-7 flex-wrap gap-2">
+                <h3 class="card-title align-items-start flex-column">
+                    <span class="card-label fw-bold text-gray-800 d-flex align-items-center">
+                        <i class="ki-outline ki-people text-primary fs-2 me-2"></i>
+                        Antrian Kunjungan Hari Ini
+                    </span>
+                    <span class="text-gray-500 mt-1 fw-semibold fs-7">
+                        Total <span class="text-primary fw-bold">{{ $queue['total'] }}</span> kunjungan ·
+                        {{ \Carbon\Carbon::today()->isoFormat('dddd, D MMM YYYY') }}
+                    </span>
+                </h3>
+                <div>
+                    <a href="{{ route('admin.visits.index') }}" class="btn btn-sm btn-light-primary">
+                        Lihat Semua <i class="ki-outline ki-arrow-right fs-5"></i>
+                    </a>
                 </div>
-                <div class="card-body pt-5">
-                    @forelse($sites as $site)
-                        <div class="d-flex align-items-center mb-7">
-                            <div class="symbol symbol-50px me-5">
-                                <span class="symbol-label bg-light-info">
-                                    <i class="ki-outline ki-shop fs-2x text-info"></i>
-                                </span>
+            </div>
+
+            <div class="card-body pt-5">
+                {{-- Ringkasan per status (4 mini stat) --}}
+                <div class="row g-2 mb-5">
+                    @foreach(['waiting' => 'Menunggu', 'in_service' => 'Dilayani', 'done' => 'Selesai', 'no_show' => 'Tidak Hadir'] as $key => $label)
+                        @php $s = $queue['by_status'][$key] ?? null; @endphp
+                        @if($s)
+                            <div class="col-6 col-md-3">
+                                <div class="bg-light-{{ $s['color'] }} rounded p-3 h-100">
+                                    <div class="fw-bold fs-2 text-{{ $s['color'] }}">{{ $s['total'] }}</div>
+                                    <div class="text-gray-700 fs-8 fw-semibold">{{ $s['label'] }}</div>
+                                </div>
                             </div>
-                            <div class="d-flex flex-column flex-grow-1">
-                                <span class="text-gray-800 fw-bold fs-6">{{ $site->name }}</span>
-                                <span class="text-gray-500 fw-semibold fs-7">{{ $site->code }} &middot; {{ $site->city ?? '—' }}</span>
+                        @endif
+                    @endforeach
+                </div>
+
+                {{-- Distribusi per kategori --}}
+                <div class="separator mb-4"></div>
+                <div class="text-gray-500 fw-bold fs-7 text-uppercase mb-3">Distribusi Per Kategori</div>
+                <div class="row g-2 mb-5">
+                    @foreach($queue['by_category'] as $key => $c)
+                        <div class="col-6">
+                            <div class="d-flex align-items-center bg-light-{{ $c['color'] }} rounded p-2">
+                                <i class="ki-outline {{ $c['icon'] }} text-{{ $c['color'] }} fs-2 me-2"></i>
+                                <div class="flex-grow-1">
+                                    <div class="text-gray-700 fs-8 fw-semibold">{{ $c['label'] }}</div>
+                                    <div class="fw-bold fs-5 text-{{ $c['color'] }}">{{ $c['total'] }}</div>
+                                </div>
                             </div>
-                            <span class="badge badge-light-{{ $site->is_active ? 'success' : 'danger' }} fw-bold">
-                                {{ $site->is_active ? 'Aktif' : 'Non-aktif' }}
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- List pasien aktif (Menunggu + Dilayani) --}}
+                <div class="separator mb-4"></div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-gray-500 fw-bold fs-7 text-uppercase">Antrian Aktif</div>
+                    <span class="badge badge-light-info">{{ $queue['active_list']->count() }}</span>
+                </div>
+
+                @forelse($queue['active_list'] as $v)
+                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom border-gray-200">
+                        <div class="symbol symbol-40px me-3 flex-shrink-0">
+                            <span class="symbol-label bg-light-{{ $v->category_color }} text-{{ $v->category_color }} fw-bold">
+                                {{ $v->queue_number ?? '—' }}
                             </span>
                         </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="text-gray-900 fw-bold fs-7 text-truncate">{{ $v->patient_name }}</div>
+                            <div class="d-flex flex-wrap gap-1 align-items-center mt-1">
+                                <span class="text-muted fs-8 font-monospace">{{ $v->no_rm }}</span>
+                                <span class="badge badge-light-{{ $v->category_color }} badge-sm">{{ $v->category_label }}</span>
+                                <span class="badge badge-{{ $v->status_color }} badge-sm">{{ $v->status_label }}</span>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-6">
+                        <i class="ki-outline ki-information-3 fs-3hx text-gray-300 d-block mb-2"></i>
+                        <span class="text-muted fs-7">Tidak ada antrian aktif saat ini.</span>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== Jadwal Kunjungan Ulang ===== --}}
+    <div class="col-xl-7">
+        <div class="card h-100">
+            <div class="card-header pt-7 flex-wrap gap-2">
+                <h3 class="card-title align-items-start flex-column">
+                    <span class="card-label fw-bold text-gray-800 d-flex align-items-center">
+                        <i class="ki-outline ki-calendar-tick text-success fs-2 me-2"></i>
+                        Jadwal Kunjungan Ulang
+                    </span>
+                    <span class="text-gray-500 mt-1 fw-semibold fs-7">
+                        Dijadwalkan dalam 3 hari ke depan ·
+                        <span class="text-success fw-bold">{{ $upcomingVisits->count() }}</span> jadwal
+                    </span>
+                </h3>
+            </div>
+            <div class="card-body pt-3">
+
+                {{-- DESKTOP TABLE --}}
+                <div class="table-responsive d-none d-md-block">
+                    <table class="table table-row-bordered table-row-gray-200 align-middle gy-3 gs-0 mb-0">
+                        <thead>
+                            <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
+                                <th>Pasien</th>
+                                <th>Jenis</th>
+                                <th class="text-nowrap">Jadwal</th>
+                                <th class="text-end">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fw-semibold fs-6 text-gray-700">
+                            @forelse ($upcomingVisits as $v)
+                                <tr>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="text-gray-900 fw-bold">{{ $v->name }}</span>
+                                            <span class="text-muted fs-7 font-monospace">
+                                                {{ $v->no_rm }}
+                                                @if($v->phone)
+                                                    &middot; <i class="ki-outline ki-phone fs-7"></i> {{ $v->phone }}
+                                                @endif
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-light-{{ $v->color }} fw-bold">{{ $v->type }}</span>
+                                        <div class="text-muted fs-8 mt-1">{{ $v->type_label }}</div>
+                                    </td>
+                                    <td class="text-nowrap">
+                                        <div class="text-gray-800 fw-bold">{{ $v->date_human }}</div>
+                                    </td>
+                                    <td class="text-end">
+                                        @if($v->days_left === 0)
+                                            <span class="badge badge-danger fw-bold">{{ $v->day_label }}</span>
+                                        @elseif($v->days_left === 1)
+                                            <span class="badge badge-warning fw-bold">{{ $v->day_label }}</span>
+                                        @else
+                                            <span class="badge badge-light-primary fw-bold">{{ $v->day_label }}</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center py-8">
+                                        <i class="ki-outline ki-calendar-remove fs-3hx text-gray-300 d-block mb-3"></i>
+                                        <span class="text-muted">Belum ada jadwal kunjungan ulang dalam 3 hari ke depan.</span>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- MOBILE CARDS --}}
+                <div class="d-md-none">
+                    @forelse ($upcomingVisits as $v)
+                        <div class="border border-gray-200 rounded p-4 mb-3 bg-light-{{ $v->color }} bg-opacity-25">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="flex-grow-1 me-2">
+                                    <div class="text-gray-900 fw-bold fs-6">{{ $v->name }}</div>
+                                    <div class="text-muted fs-7 font-monospace">{{ $v->no_rm }}</div>
+                                </div>
+                                @if($v->days_left === 0)
+                                    <span class="badge badge-danger fw-bold flex-shrink-0">{{ $v->day_label }}</span>
+                                @elseif($v->days_left === 1)
+                                    <span class="badge badge-warning fw-bold flex-shrink-0">{{ $v->day_label }}</span>
+                                @else
+                                    <span class="badge badge-light-primary fw-bold flex-shrink-0">{{ $v->day_label }}</span>
+                                @endif
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mb-2">
+                                <span class="badge badge-light-{{ $v->color }} fw-bold">{{ $v->type }}</span>
+                                <span class="text-muted fs-7 align-self-center">{{ $v->type_label }}</span>
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center text-gray-700 fs-7">
+                                <i class="ki-outline ki-calendar text-primary fs-5 me-1"></i>
+                                <span class="fw-semibold">{{ $v->date_human }}</span>
+                            </div>
+                            @if($v->phone)
+                                <div class="mt-2">
+                                    <a href="tel:{{ $v->phone }}" class="btn btn-sm btn-light-success">
+                                        <i class="ki-outline ki-phone fs-5"></i>{{ $v->phone }}
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
                     @empty
-                        <div class="text-muted">Belum ada klinik terdaftar.</div>
+                        <div class="text-center py-8">
+                            <i class="ki-outline ki-calendar-remove fs-3hx text-gray-300 d-block mb-3"></i>
+                            <span class="text-muted">Belum ada jadwal kunjungan ulang dalam 3 hari ke depan.</span>
+                        </div>
                     @endforelse
                 </div>
             </div>
         </div>
-
-        <div class="col-xl-7">
-    @else
-        <div class="col-xl-5">
-            <div class="card h-100">
-                <div class="card-header pt-7">
-                    <h3 class="card-title align-items-start flex-column">
-                        <span class="card-label fw-bold text-gray-800">Info Klinik</span>
-                        <span class="text-gray-500 mt-1 fw-semibold fs-6">{{ $currentSite?->name }}</span>
-                    </h3>
-                </div>
-                <div class="card-body pt-5">
-                    @if($currentSite)
-                        <div class="d-flex flex-stack mb-3">
-                            <span class="text-muted">Kode:</span>
-                            <span class="fw-bold">{{ $currentSite->code }}</span>
-                        </div>
-                        <div class="d-flex flex-stack mb-3">
-                            <span class="text-muted">Kota:</span>
-                            <span class="fw-bold">{{ $currentSite->city ?? '—' }}</span>
-                        </div>
-                        <div class="d-flex flex-stack mb-3">
-                            <span class="text-muted">Phone:</span>
-                            <span class="fw-bold">{{ $currentSite->phone ?? '—' }}</span>
-                        </div>
-                        <div class="d-flex flex-stack mb-3">
-                            <span class="text-muted">Email:</span>
-                            <span class="fw-bold">{{ $currentSite->email ?? '—' }}</span>
-                        </div>
-                        <div class="separator my-3"></div>
-                        <div class="text-muted fs-7">{{ $currentSite->address }}</div>
-                    @endif
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-7">
-    @endif
-
-        {{-- Recent login attempts --}}
-        <div class="card h-100">
-            <div class="card-header pt-7">
-                <h3 class="card-title align-items-start flex-column">
-                    <span class="card-label fw-bold text-gray-800">Aktivitas Login Terakhir</span>
-                    <span class="text-gray-500 mt-1 fw-semibold fs-6">{{ $recentLogins->count() }} percobaan terbaru</span>
-                </h3>
-            </div>
-            <div class="card-body pt-5">
-                <table class="table table-row-bordered table-row-gray-200 align-middle gy-3 gs-0">
-                    <thead>
-                        <tr class="text-gray-500 fw-bold fs-7 text-uppercase">
-                            <th>Username</th>
-                            <th>IP</th>
-                            <th>Status</th>
-                            <th class="text-end">Waktu</th>
-                        </tr>
-                    </thead>
-                    <tbody class="fw-semibold fs-6 text-gray-700">
-                        @forelse ($recentLogins as $log)
-                            <tr>
-                                <td>{{ $log->username ?? '—' }}</td>
-                                <td><span class="text-muted fs-7">{{ $log->ip_address }}</span></td>
-                                <td>
-                                    @if ($log->success)
-                                        <span class="badge badge-light-success">Sukses</span>
-                                    @else
-                                        <span class="badge badge-light-danger" title="{{ $log->failure_reason }}">
-                                            {{ $log->failure_reason }}
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="text-end text-muted fs-7">
-                                    {{ \Carbon\Carbon::parse($log->attempted_at)->diffForHumans() }}
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="4" class="text-center text-muted">Belum ada aktivitas.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
 </div>
 
-{{-- Info card: Status development --}}
-<div class="card mt-5 bg-light-info">
-    <div class="card-body d-flex align-items-center">
-        <i class="ki-outline ki-information-5 fs-3hx text-info me-5"></i>
-        <div>
-            <h5 class="text-gray-800 mb-1">Phase 0 — Master & Auth</h5>
-            <p class="text-muted mb-0 fs-7">
-                Modul transaksi (rekam medis, pembayaran, antrian) akan dibuat setelah ada contoh format manual dari klinik.
-                Saat ini fokus: master pasien, dokter, layanan, obat, jadwal praktek.
-            </p>
-        </div>
-    </div>
-</div>
 @endsection

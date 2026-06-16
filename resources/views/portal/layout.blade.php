@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Portal Pasien') — Klinik247</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/logo/icon-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('assets/logo/icon-logo.png') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -137,15 +139,11 @@
     {{-- ===== Top App Bar ===== --}}
     <header class="bg-surface-container-lowest/95 backdrop-blur-md sticky top-0 z-50 flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-20 border-b border-outline-variant/60">
         <a href="{{ route('portal.index') }}" class="flex items-center gap-md group">
-            <div class="w-12 h-12 rounded-xl bg-white shadow-md flex items-center justify-center overflow-hidden ring-1 ring-outline-variant/40 group-hover:scale-105 transition-transform">
-                <img src="{{ asset('portal/logo-klinik247.png') }}" alt="Klinik247"
-                     class="w-11 h-11 object-contain"
-                     onerror="this.outerHTML='<span class=&quot;material-symbols-outlined text-primary&quot; style=&quot;font-size:28px;font-variation-settings:\&quot;FILL\&quot; 1;&quot;>medical_services</span>'">
-            </div>
-            <div class="flex flex-col leading-tight">
-                <span class="font-display text-lg font-bold text-primary">Portal Pasien</span>
-                <span class="text-label-md text-on-surface-variant -mt-0.5">Klinik247 · Kesehatan Kapan Saja</span>
-            </div>
+            <img src="{{ asset('assets/logo/logo-klinik-247-h.png') }}" alt="Klinik247"
+                 class="h-12 w-auto object-contain group-hover:scale-105 transition-transform">
+            <span class="hidden md:inline-block text-label-md text-on-surface-variant border-l border-outline-variant pl-md ml-xs">
+                Portal Pasien
+            </span>
         </a>
 
         <div class="flex items-center gap-sm">

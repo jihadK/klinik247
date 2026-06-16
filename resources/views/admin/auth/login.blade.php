@@ -12,8 +12,10 @@
                     @csrf
 
                     <div class="text-center mb-11">
-                        <h1 class="text-gray-900 fw-bolder mb-3">Klinik247 Admin</h1>
-                        <div class="text-gray-500 fw-semibold fs-6">Portal Administrasi Klinik</div>
+                        <img src="{{ asset('assets/logo/logo-klinik-247-h.png') }}" alt="Klinik247"
+                             style="max-height:72px; width:auto;" class="mb-4">
+                        <h1 class="text-gray-900 fw-bolder mb-2 fs-2">Portal Administrasi</h1>
+                        <div class="text-gray-500 fw-semibold fs-6">Sistem Manajemen Klinik</div>
                     </div>
 
                     @if ($errors->any())
@@ -66,15 +68,107 @@
         </div>
     </div>
 
-    {{-- Aside (banner) --}}
-    <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center order-1 order-lg-2"
-         style="background-color: #1e88e5">
-        <div class="d-flex flex-column flex-center py-15 px-5 px-md-15 w-100">
-            <i class="ki-outline ki-pulse text-white" style="font-size: 6rem"></i>
-            <h1 class="text-white fs-2qx fw-bolder text-center mt-5 mb-7">{{ config('app.name') }}</h1>
-            <div class="text-white fs-base text-center opacity-75">
-                Sistem Manajemen Klinik Multi-Tenant<br/>
-                Layanan kesehatan terdigitalisasi untuk klinik kecil & menengah.
+    {{-- Aside (banner) — Medical Clinic Theme --}}
+    <div class="d-flex flex-lg-row-fluid w-lg-50 order-1 order-lg-2 position-relative overflow-hidden"
+         style="background: linear-gradient(135deg, #001b3d 0%, #00478d 45%, #005eb8 75%, #006970 100%);">
+
+        {{-- SVG Background Pattern --}}
+        <svg class="position-absolute" style="top:0; left:0; width:100%; height:100%; opacity:0.18; pointer-events:none;"
+             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+                    <path d="M48 0 L0 0 0 48" fill="none" stroke="#fff" stroke-width="0.5"/>
+                </pattern>
+                <radialGradient id="glow1" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#7af1fc" stop-opacity="0.6"/>
+                    <stop offset="100%" stop-color="#7af1fc" stop-opacity="0"/>
+                </radialGradient>
+            </defs>
+            <rect width="800" height="1000" fill="url(#grid)"/>
+            <circle cx="650" cy="200" r="220" fill="url(#glow1)"/>
+            <circle cx="120" cy="800" r="180" fill="url(#glow1)" opacity="0.5"/>
+        </svg>
+
+        {{-- Floating decorative medical icons --}}
+        <svg class="position-absolute" style="top:0; left:0; width:100%; height:100%; pointer-events:none; opacity:0.55;"
+             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice">
+
+            {{-- ECG heartbeat line --}}
+            <polyline points="50,500 180,500 210,440 240,560 270,420 300,580 330,500 460,500 490,440 520,560 550,500 750,500"
+                      stroke="#7af1fc" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+            {{-- Stethoscope curve abstract --}}
+            <path d="M150,150 Q250,80 350,180 Q420,260 360,360 Q300,440 230,400"
+                  stroke="#c8daff" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.7"/>
+            <circle cx="230" cy="400" r="14" fill="none" stroke="#c8daff" stroke-width="3" opacity="0.7"/>
+
+            {{-- Floating crosses --}}
+            <g fill="#fff" opacity="0.6">
+                <g transform="translate(680,120)">
+                    <rect x="-3" y="-14" width="6" height="28" rx="1.5"/>
+                    <rect x="-14" y="-3" width="28" height="6" rx="1.5"/>
+                </g>
+                <g transform="translate(90,250)" opacity="0.7">
+                    <rect x="-4" y="-18" width="8" height="36" rx="2"/>
+                    <rect x="-18" y="-4" width="36" height="8" rx="2"/>
+                </g>
+                <g transform="translate(700,780)" opacity="0.5">
+                    <rect x="-3" y="-12" width="6" height="24" rx="1.5"/>
+                    <rect x="-12" y="-3" width="24" height="6" rx="1.5"/>
+                </g>
+            </g>
+
+            {{-- Floating dots --}}
+            <g fill="#7af1fc">
+                <circle cx="500" cy="100" r="4" opacity="0.7"/>
+                <circle cx="580" cy="160" r="3" opacity="0.5"/>
+                <circle cx="120" cy="450" r="5" opacity="0.6"/>
+                <circle cx="730" cy="500" r="3" opacity="0.7"/>
+                <circle cx="200" cy="900" r="4" opacity="0.6"/>
+                <circle cx="640" cy="900" r="6" opacity="0.5"/>
+            </g>
+
+            {{-- Pulse rings --}}
+            <circle cx="650" cy="650" r="40" fill="none" stroke="#7af1fc" stroke-width="2" opacity="0.4"/>
+            <circle cx="650" cy="650" r="80" fill="none" stroke="#7af1fc" stroke-width="1.5" opacity="0.25"/>
+            <circle cx="650" cy="650" r="120" fill="none" stroke="#7af1fc" stroke-width="1" opacity="0.15"/>
+        </svg>
+
+        {{-- Content overlay --}}
+        <div class="d-flex flex-column flex-center py-15 px-5 px-md-15 w-100 position-relative" style="z-index:2;">
+
+            {{-- Logo --}}
+            <img src="{{ asset('assets/logo/logo-klinik-247-v.png') }}" alt="Klinik247"
+                 style="max-height: 220px; width: auto; filter: drop-shadow(0 12px 32px rgba(0,0,0,0.4));"
+                 class="mb-8">
+
+            {{-- Tagline --}}
+            <h2 class="text-white fw-bolder text-center mb-4" style="font-size:1.75rem; max-width:480px; line-height:1.3;">
+                Layanan Kesehatan<br>
+                <span style="background: linear-gradient(90deg, #7af1fc, #c8daff); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">
+                    Tanpa Batas Waktu
+                </span>
+            </h2>
+
+            <div class="text-white text-center mb-8 opacity-75" style="max-width: 460px; font-size: 1rem; line-height: 1.6;">
+                Sistem manajemen klinik terintegrasi — pendaftaran, rekam medis,
+                pelayanan ibu &amp; anak, hingga portal pasien mandiri.
+            </div>
+
+            {{-- Feature pills --}}
+            <div class="d-flex flex-wrap justify-content-center gap-2" style="max-width: 500px;">
+                <span class="d-inline-flex align-items-center px-3 py-2 rounded-pill text-white" style="background:rgba(255,255,255,0.12); backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,0.2); font-size:0.8rem;">
+                    <i class="ki-outline ki-heart text-white me-1 fs-7"></i> ANC &amp; INC
+                </span>
+                <span class="d-inline-flex align-items-center px-3 py-2 rounded-pill text-white" style="background:rgba(255,255,255,0.12); backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,0.2); font-size:0.8rem;">
+                    <i class="ki-outline ki-shield-tick text-white me-1 fs-7"></i> KB &amp; Imunisasi
+                </span>
+                <span class="d-inline-flex align-items-center px-3 py-2 rounded-pill text-white" style="background:rgba(255,255,255,0.12); backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,0.2); font-size:0.8rem;">
+                    <i class="ki-outline ki-people text-white me-1 fs-7"></i> Multi-Tenant
+                </span>
+                <span class="d-inline-flex align-items-center px-3 py-2 rounded-pill text-white" style="background:rgba(255,255,255,0.12); backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,0.2); font-size:0.8rem;">
+                    <i class="ki-outline ki-medical-cross text-white me-1 fs-7"></i> Portal Pasien
+                </span>
             </div>
         </div>
     </div>
