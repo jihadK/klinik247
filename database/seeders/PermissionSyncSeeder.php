@@ -63,8 +63,6 @@ class PermissionSyncSeeder extends Seeder
                     'module'       => $module,
                     'description'  => null,
                     'is_active'    => true,
-                    'created_at'   => $now,
-                    'updated_at'   => $now,
                 ];
             }
         }
@@ -73,7 +71,7 @@ class PermissionSyncSeeder extends Seeder
         DB::table('tbm_permissions')->upsert(
             $rows,
             ['name'],
-            ['display_name', 'module', 'is_active', 'updated_at']
+            ['display_name', 'module', 'is_active']
         );
 
         $this->command->info('✅ Synced '.count($rows).' permissions.');
