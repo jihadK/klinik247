@@ -11,6 +11,11 @@
                 <button class="btn btn-sm btn-light-primary">Cari</button>
             </form>
         </div>
+        <div class="card-toolbar">
+            <a href="{{ route('admin.child.create') }}" class="btn btn-sm btn-primary">
+                <i class="ki-outline ki-plus fs-3"></i> Tambah Pasien Anak
+            </a>
+        </div>
     </div>
     <div class="card-body">
         <div class="table-responsive">

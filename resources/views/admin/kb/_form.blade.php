@@ -28,9 +28,25 @@
                                 @if($patient->phone) · 📞 {{ $patient->phone }} @endif
                             </div>
                         </div>
+                        @if(! ($isEdit ?? false))
+                            <a href="{{ route('admin.kb.create') }}" class="btn btn-sm btn-light-warning" title="Ganti pasien">
+                                <i class="ki-outline ki-arrows-loop fs-3"></i> Ganti
+                            </a>
+                        @endif
                     </div>
                 @else
-                    <div class="alert alert-warning">Tidak ada data pasien. Daftarkan via tombol "Akseptor Baru" di halaman akseptor atau dari kunjungan.</div>
+                    <label class="form-label fs-7 fw-bold mb-2">
+                        <i class="ki-outline ki-magnifier fs-3 text-primary me-1"></i>
+                        Pilih Pasien (Akseptor KB)
+                    </label>
+                    <select id="kb_patient_picker" class="form-select form-select-solid"
+                            data-control="select2" data-placeholder="Cari pasien: nama / No.RM / NIK / HP..." data-allow-clear="true">
+                        <option></option>
+                    </select>
+                    <div class="form-text fs-8 mt-2">
+                        💡 Ketik min. 2 huruf untuk cari pasien. Hanya pasien <b>perempuan</b> usia subur yang ditampilkan.
+                        Pasien baru? <a href="{{ route('admin.patients.create') }}" target="_blank">Daftarkan dulu di sini</a>.
+                    </div>
                 @endif
             </div>
         </div>

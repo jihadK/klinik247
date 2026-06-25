@@ -9,7 +9,7 @@ class StoreImmunizationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->user()?->hasPermission('immunization.create') ?? false;
+        return auth()->user()?->hasPermission('child.create') ?? false;
     }
 
     public function rules(): array

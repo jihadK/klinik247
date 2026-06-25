@@ -29,6 +29,7 @@ class AncController extends Controller
     public function index(Request $request): View
     {
         $pregnancies = Pregnancy::with(['patient'])
+            ->withMax('ancVisits as next_visit_date', 'tanggal_kembali')
             ->search($request->input('q'))
             ->when($request->filled('status'),    fn ($q) => $q->where('status', $request->input('status')))
             ->when($request->filled('trimester'), function ($q) use ($request) {

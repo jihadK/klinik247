@@ -19,9 +19,25 @@
                                 @if($patient->phone) · 📞 {{ $patient->phone }} @endif
                             </div>
                         </div>
+                        @if(! $isEdit)
+                            <a href="{{ route('admin.anc.create') }}" class="btn btn-sm btn-light-warning" title="Ganti pasien">
+                                <i class="ki-outline ki-arrows-loop fs-3"></i> Ganti
+                            </a>
+                        @endif
                     </div>
                 @else
-                    <div class="alert alert-warning">Tidak ada data pasien. Akses via Visit kategori I atau pilih pasien dulu.</div>
+                    <label class="form-label fs-7 fw-bold mb-2">
+                        <i class="ki-outline ki-magnifier fs-3 text-primary me-1"></i>
+                        Pilih Pasien (Ibu Hamil)
+                    </label>
+                    <select id="anc_patient_picker" class="form-select form-select-solid"
+                            data-control="select2" data-placeholder="Cari pasien: nama / No.RM / NIK / HP..." data-allow-clear="true">
+                        <option></option>
+                    </select>
+                    <div class="form-text fs-8 mt-2">
+                        💡 Ketik min. 2 huruf untuk cari pasien. Hanya pasien <b>perempuan</b> yang ditampilkan.
+                        Pasien baru? <a href="{{ route('admin.patients.create') }}" target="_blank">Daftarkan dulu di sini</a>.
+                    </div>
                 @endif
             </div>
         </div>
@@ -228,16 +244,22 @@
                 </div>
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <label class="form-label fs-7">TFU (cm)</label>
+                        <label class="form-label fs-7">
+                            TFU (cm) <span class="text-muted fs-9">(opsional)</span>
+                        </label>
                         <input type="number" step="0.1" name="tfu_k1" id="tfu_k1"
                                value="{{ old('tfu_k1') }}" class="form-control form-control-solid"
-                               placeholder="Tinggi Fundus Uteri">
+                               placeholder="kosongkan kalau belum teraba">
+                        <div class="form-text fs-9">Mulai teraba UK ≥ 12 mg</div>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label fs-7">DJJ /menit</label>
+                        <label class="form-label fs-7">
+                            DJJ /menit <span class="text-muted fs-9">(opsional)</span>
+                        </label>
                         <input type="number" name="djj_k1" min="60" max="220"
                                value="{{ old('djj_k1') }}" class="form-control form-control-solid"
-                               placeholder="120-160 normal">
+                               placeholder="kosongkan kalau belum terdengar">
+                        <div class="form-text fs-9">120-160 normal · mulai terdengar UK ≥ 10 mg</div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fs-7">Letak Janin</label>

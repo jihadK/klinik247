@@ -73,36 +73,30 @@
                                     </td>
                                     @for($d = 1; $d <= 5; $d++)
                                         <td class="text-center">
-                                            @if(! isset($row['doses'][$d]) || $d > $row['type']->max_dose)
-                                                <span class="text-muted">-</span>
-                                            @elseif($row['doses'][$d])
-                                                @php $rec = $row['doses'][$d]; @endphp
+                                            @php $rec = $row['doses'][$d] ?? null; @endphp
+                                            @if($rec)
                                                 <button class="btn btn-sm btn-success btn-show-imm"
                                                         data-bs-toggle="modal" data-bs-target="#modal_imm_detail"
                                                         data-info="{{ json_encode([
-                                                            'type' => $row['type']->name,
-                                                            'dose' => $d,
-                                                            'date' => $rec->given_date?->isoFormat('D MMM YYYY'),
-                                                            'batch' => $rec->no_batch,
+                                                            'type'   => $row['type']->name,
+                                                            'dose'   => $d,
+                                                            'date'   => $rec->given_date?->isoFormat('D MMM YYYY'),
+                                                            'batch'  => $rec->no_batch,
                                                             'tempat' => $rec->tempat,
-                                                            'side' => $rec->side_effects,
-                                                            'next' => optional($rec->next_due_date)->isoFormat('D MMM YYYY'),
+                                                            'side'   => $rec->side_effects,
+                                                            'next'   => optional($rec->next_due_date)->isoFormat('D MMM YYYY'),
                                                         ]) }}"
                                                         title="{{ optional($rec->given_date)->format('d/m/Y') }}">
                                                     ✓
                                                 </button>
                                             @else
-                                                @if(auth()->user()->hasPermission('immunization.create'))
-                                                    <button type="button" class="btn btn-sm btn-light-info btn-add-imm"
-                                                            data-bs-toggle="modal" data-bs-target="#modal_imm_add"
-                                                            data-type-id="{{ $row['type']->id }}"
-                                                            data-type-name="{{ $row['type']->name }}"
-                                                            data-dose="{{ $d }}">
-                                                        + Beri
-                                                    </button>
-                                                @else
-                                                    <span class="badge badge-light">Belum</span>
-                                                @endif
+                                                <button type="button" class="btn btn-sm btn-light-info btn-add-imm"
+                                                        data-bs-toggle="modal" data-bs-target="#modal_imm_add"
+                                                        data-type-id="{{ $row['type']->id }}"
+                                                        data-type-name="{{ $row['type']->name }}"
+                                                        data-dose="{{ $d }}">
+                                                    + Beri
+                                                </button>
                                             @endif
                                         </td>
                                     @endfor
@@ -150,14 +144,20 @@
                                     <td>{{ $v->umur_label ?? '-' }}</td>
                                     <td>
                                         @if($v->berat_badan_gram){{ $v->berat_badan_gram }} g<br>@endif
-                                        @if($v->panjang_badan_cm){{ $v->panjang_badan_cm }} cm@endif
+                                        @if($v->panjang_badan_cm){{ $v->panjang_badan_cm }} cm @endif
                                     </td>
                                     <td>{{ $v->lingkar_kepala_cm ?? '-' }} cm</td>
                                     <td>{{ $v->suhu_celcius ?? '-' }}°C</td>
                                     <td>
                                         @if($v->status_gizi)
-                                            <span class="badge badge-light-{{ str_contains($v->status_gizi, 'buruk') || str_contains($v->status_gizi, 'obesitas') ? 'danger' : (str_contains($v->status_gizi, 'baik') ? 'success' : 'warning') }} fs-9">
-                                                {{ $statusGiziOptions[$v->status_gizi] ?? $v->status_gizi }}
+                                            @php
+                                                $gz = $v->status_gizi;
+                                                $isBad = str_contains($gz, 'buruk') || str_contains($gz, 'obesitas');
+                                                $isOk  = str_contains($gz, 'baik');
+                                                $gzColor = $isBad ? 'danger' : ($isOk ? 'success' : 'warning');
+                                            @endphp
+                                            <span class="badge badge-light-{{ $gzColor }} fs-9">
+                                                {{ $statusGiziOptions[$gz] ?? $gz }}
                                             </span>
                                         @endif
                                         @if($v->stunting)<div class="badge badge-light-danger fs-9 mt-1">⚠ Stunting</div>@endif
@@ -165,8 +165,12 @@
                                     </td>
                                     <td>
                                         @if($v->perkembangan_status)
-                                            <span class="badge badge-light-{{ $v->perkembangan_status === 'sesuai' ? 'success' : ($v->perkembangan_status === 'meragukan' ? 'warning' : 'danger') }} fs-9">
-                                                {{ $perkembanganOptions[$v->perkembangan_status] ?? $v->perkembangan_status }}
+                                            @php
+                                                $pk = $v->perkembangan_status;
+                                                $pkColor = $pk === 'sesuai' ? 'success' : ($pk === 'meragukan' ? 'warning' : 'danger');
+                                            @endphp
+                                            <span class="badge badge-light-{{ $pkColor }} fs-9">
+                                                {{ $perkembanganOptions[$pk] ?? $pk }}
                                             </span>
                                         @endif
                                     </td>

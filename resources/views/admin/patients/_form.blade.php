@@ -216,96 +216,17 @@
             </div>
         </div>
 
-        {{-- ===== Alamat ===== --}}
+        {{-- ===== Alamat & Kontak ===== --}}
         <div class="card mb-5">
-            <div class="card-header"><h3 class="card-title">Alamat</h3></div>
+            <div class="card-header"><h3 class="card-title">Alamat &amp; Kontak</h3></div>
             <div class="card-body">
-
-                <div class="row mb-4">
-                    <label class="col-form-label col-md-3 fw-semibold">Wilayah</label>
-                    <div class="col-md-9">
-                        <select name="wilayah_type" class="form-select form-select-solid w-300px"
-                                data-control="select2" data-placeholder="Pilih wilayah..." data-allow-clear="true" data-minimum-results-for-search="-1">
-                            <option></option>
-                            <option value="dalam_wilayah" @selected(old('wilayah_type', $patient->wilayah_type)==='dalam_wilayah')>Dalam Wilayah</option>
-                            <option value="luar_wilayah" @selected(old('wilayah_type', $patient->wilayah_type)==='luar_wilayah')>Luar Wilayah</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row mb-4">
-                    <label class="col-form-label col-md-3 fw-semibold">Provinsi</label>
-                    <div class="col-md-9">
-                        <select name="province_code" id="province_code" class="form-select form-select-solid"
-                                data-control="select2" data-placeholder="Cari/pilih provinsi..." data-allow-clear="true">
-                            <option></option>
-                            @foreach($provinces as $prov)
-                                <option value="{{ $prov->code }}" @selected(old('province_code', $patient->province_code)===$prov->code)>{{ $prov->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row mb-4">
-                    <label class="col-form-label col-md-3 fw-semibold">Kab/Kota</label>
-                    <div class="col-md-9">
-                        <select name="regency_code" id="regency_code" class="form-select form-select-solid"
-                                data-control="select2" data-placeholder="Cari/pilih kab/kota..." data-allow-clear="true">
-                            <option></option>
-                            @foreach($regencies as $reg)
-                                <option value="{{ $reg->code }}" data-province="{{ $reg->province_code }}"
-                                    @selected(old('regency_code', $patient->regency_code)===$reg->code)>{{ $reg->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row mb-4">
-                    <label class="col-form-label col-md-3 fw-semibold">Kecamatan</label>
-                    <div class="col-md-9">
-                        <select name="district_code" id="district_code" class="form-select form-select-solid"
-                                data-control="select2" data-placeholder="Cari/pilih kecamatan..." data-allow-clear="true">
-                            <option></option>
-                            @foreach($districts as $dis)
-                                <option value="{{ $dis->code }}" data-regency="{{ $dis->regency_code }}"
-                                    @selected(old('district_code', $patient->district_code)===$dis->code)>{{ $dis->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="row mb-4">
-                    <label class="col-form-label col-md-3 fw-semibold">Desa/Kel</label>
-                    <div class="col-md-9">
-                        <select name="village_code" id="village_code" class="form-select form-select-solid"
-                                data-control="select2" data-placeholder="Cari/pilih desa/kel..." data-allow-clear="true">
-                            <option></option>
-                            @foreach($villages as $vil)
-                                <option value="{{ $vil->code }}" data-district="{{ $vil->district_code }}" data-postal="{{ $vil->postal_code }}"
-                                    @selected(old('village_code', $patient->village_code)===$vil->code)>{{ $vil->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
 
                 <div class="row mb-4">
                     <label class="col-form-label col-md-3 fw-semibold">Alamat Lengkap</label>
                     <div class="col-md-9">
-                        <textarea name="address" rows="2" class="form-control form-control-solid">{{ old('address', $patient->address) }}</textarea>
-                        <div class="form-text fs-8">Jalan, gang, no rumah, dst.</div>
-                    </div>
-                </div>
-
-                <div class="row mb-4">
-                    <label class="col-form-label col-md-3 fw-semibold">RT/RW</label>
-                    <div class="col-md-3">
-                        <input type="text" name="rt_rw" value="{{ old('rt_rw', $patient->rt_rw) }}"
-                               class="form-control form-control-solid" placeholder="001/002" maxlength="20">
-                    </div>
-                    <label class="col-form-label col-md-2 fw-semibold">Kode Pos</label>
-                    <div class="col-md-4">
-                        <input type="text" name="postal_code" id="postal_code" value="{{ old('postal_code', $patient->postal_code) }}"
-                               class="form-control form-control-solid" maxlength="10">
+                        <textarea name="address" rows="5" class="form-control form-control-solid"
+                                  placeholder="Tulis alamat lengkap (jalan, RT/RW, dusun, desa, kecamatan, kabupaten, kode pos)...">{{ old('address', $patient->address) }}</textarea>
+                        <div class="form-text fs-8">Free-text — tulis selengkap mungkin sesuai KK.</div>
                     </div>
                 </div>
 
@@ -313,7 +234,7 @@
                     <label class="col-form-label col-md-3 fw-semibold">No. HP / Telp</label>
                     <div class="col-md-5">
                         <input type="text" name="phone" value="{{ old('phone', $patient->phone) }}"
-                               class="form-control form-control-solid" maxlength="20">
+                               class="form-control form-control-solid" maxlength="20" placeholder="0851-1234-5678">
                     </div>
                 </div>
 
@@ -573,100 +494,18 @@ $(function() {
         if (len >= 16) kkTimer = setTimeout(doLookup, 300);
     });
 
-    // Apply alamat dari KK existing
+    // Apply alamat dari KK existing — free-text mode
     $(document).on('click', '#btn_apply_kk_address', function() {
         const d = $(this).data('payload');
         if (! d) return;
 
-        // Set wilayah cascade — pakai trigger change agar filter child select bekerja
-        if (d.province_code) $('#province_code').val(d.province_code).trigger('change');
-        setTimeout(() => {
-            if (d.regency_code) $('#regency_code').val(d.regency_code).trigger('change');
-            setTimeout(() => {
-                if (d.district_code) $('#district_code').val(d.district_code).trigger('change');
-                setTimeout(() => {
-                    if (d.village_code) $('#village_code').val(d.village_code).trigger('change');
-                }, 100);
-            }, 100);
-        }, 100);
-
-        // Set field lainnya
-        if (d.address)      $('textarea[name=address]').val(d.address);
-        if (d.rt_rw)        $('input[name=rt_rw]').val(d.rt_rw);
-        if (d.postal_code)  $('#postal_code').val(d.postal_code);
-        if (d.wilayah_type) $('select[name=wilayah_type]').val(d.wilayah_type).trigger('change');
+        if (d.address) $('textarea[name=address]').val(d.address);
 
         // Visual feedback
         $(this).removeClass('btn-success').addClass('btn-light-success')
                .html('<i class="ki-outline ki-check fs-3"></i> Alamat keluarga diterapkan');
         setTimeout(() => $(this).prop('disabled', true), 100);
     });
-});
-
-// ===== Cascade wilayah Select2-aware: filter Kab → Kec → Desa berdasar parent =====
-$(function() {
-    const $prov = $('#province_code');
-    const $reg  = $('#regency_code');
-    const $dis  = $('#district_code');
-    const $vil  = $('#village_code');
-    const $postal = $('#postal_code');
-
-    // Cache HTML asli sekali — supaya restore filter bisa balik ke list lengkap
-    function cacheOriginal($sel) {
-        if (! $sel.data('originalHtml')) {
-            $sel.data('originalHtml', $sel.html());
-        }
-    }
-    cacheOriginal($reg); cacheOriginal($dis); cacheOriginal($vil);
-
-    function filterChild($childSel, dataKey, parentVal) {
-        // Restore all options dulu
-        $childSel.html($childSel.data('originalHtml'));
-        if (parentVal) {
-            $childSel.find('option').each(function() {
-                const $o = $(this);
-                if ($o.val() && String($o.data(dataKey)) !== String(parentVal)) {
-                    $o.remove();
-                }
-            });
-        }
-        // Re-trigger select2 supaya dropdown refresh
-        $childSel.trigger('change.select2');
-    }
-
-    $prov.on('change', function() {
-        filterChild($reg, 'province', this.value);
-        $reg.val('').trigger('change');
-        filterChild($dis, 'regency', '');
-        $dis.val('').trigger('change');
-        filterChild($vil, 'district', '');
-        $vil.val('').trigger('change');
-    });
-
-    $reg.on('change', function() {
-        filterChild($dis, 'regency', this.value);
-        $dis.val('').trigger('change');
-        filterChild($vil, 'district', '');
-        $vil.val('').trigger('change');
-    });
-
-    $dis.on('change', function() {
-        filterChild($vil, 'district', this.value);
-        $vil.val('').trigger('change');
-    });
-
-    $vil.on('change', function() {
-        const $o = $vil.find('option:selected');
-        const pos = $o.data('postal');
-        if (pos && ! $postal.val()) {
-            $postal.val(pos);
-        }
-    });
-
-    // Apply filter saat load (kalau edit mode dengan value pre-selected)
-    if ($prov.val()) filterChild($reg, 'province', $prov.val());
-    if ($reg.val())  filterChild($dis, 'regency',  $reg.val());
-    if ($dis.val())  filterChild($vil, 'district', $dis.val());
 });
 </script>
 @endpush

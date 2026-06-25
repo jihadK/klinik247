@@ -102,7 +102,13 @@
                     </div>
                 </div>
 
-                <div class="menu-item menu-accordion {{ request()->routeIs('admin.anc.*') ? 'here show' : '' }}" data-kt-menu-trigger="click">
+                @php
+                    $maternalActive = request()->routeIs('admin.anc.*')
+                        || request()->routeIs('admin.inc.*')
+                        || request()->routeIs('admin.pnc.*')
+                        || request()->routeIs('admin.kn.*');
+                @endphp
+                <div class="menu-item menu-accordion {{ $maternalActive ? 'here show' : '' }}" data-kt-menu-trigger="click">
                     <span class="menu-link">
                         <span class="menu-icon"><i class="ki-outline ki-heart-circle fs-2"></i></span>
                         <span class="menu-title">Maternal Care</span>
@@ -136,7 +142,7 @@
                     </div>
                 </div>
 
-                <div class="menu-item menu-accordion" data-kt-menu-trigger="click">
+                <div class="menu-item menu-accordion {{ request()->routeIs('admin.child.*') ? 'here show' : '' }}" data-kt-menu-trigger="click">
                     <span class="menu-link">
                         <span class="menu-icon"><i class="ki-outline ki-tag fs-2"></i></span>
                         <span class="menu-title">Bayi & Anak</span>

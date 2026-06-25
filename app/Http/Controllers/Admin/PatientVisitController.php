@@ -261,7 +261,7 @@ class PatientVisitController extends Controller
             ->with('payerType')
             ->orderBy('name')
             ->limit(15)
-            ->get(['id', 'no_rm', 'nik', 'name', 'birth_date', 'gender', 'phone', 'payer_type_id']);
+            ->get(['id', 'no_rm', 'nik', 'name', 'birth_date', 'gender', 'phone', 'address', 'payer_type_id']);
 
         return $this->ok($rows->map(fn ($p) => [
             'id'       => $p->id,
@@ -271,6 +271,7 @@ class PatientVisitController extends Controller
             'gender'   => $p->gender,
             'age'      => $p->age,
             'phone'    => $p->phone,
+            'address'  => $p->address,
             'payer'    => optional($p->payerType)->name,
         ]));
     }

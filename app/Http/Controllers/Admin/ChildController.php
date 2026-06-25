@@ -10,6 +10,8 @@ use App\Models\ChildVisit;
 use App\Models\ImmunizationRecord;
 use App\Models\ImmunizationType;
 use App\Models\Neonate;
+use App\Models\Patient;
+use App\Support\DocNumber;
 use App\Support\Flash;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,12 +49,55 @@ class ChildController extends Controller
         ]);
     }
 
+    /* ============================== CREATE (Walk-in Child) ============================== */
+    public function create(Request $request): View|RedirectResponse
+    {
+        // Kalau patient_id ada → auto-create Neonate dari data pasien
+        if ($request->filled('patient_id')) {
+            $patient = Patient::find($request->input('patient_id'));
+            if (! $patient) {
+                return redirect()->route('admin.child.create')
+                    ->with('flash', Flash::err('Pasien tidak ditemukan.'));
+            }
+
+            // Cek apakah pasien ini sudah punya Neonate record
+            $existing = Neonate::where('patient_id', $patient->id)
+                ->orWhere(function ($q) use ($patient) {
+                    $q->where('nama_bayi', $patient->name)
+                      ->where('tanggal_lahir', $patient->birth_date);
+                })
+                ->first();
+            if ($existing) {
+                return redirect()->route('admin.child.show', $existing)
+                    ->with('flash', Flash::info("Anak <b>{$patient->name}</b> sudah terdaftar dengan No.Kartu <b>{$existing->no_kartu_bayi}</b>."));
+            }
+
+            // Walk-in: auto-create Neonate minimal dari data pasien
+            $neonate = Neonate::create([
+                'site_id'        => $patient->site_id,
+                'patient_id'     => $patient->id, // pakai patient_id pasien sendiri (fallback walk-in)
+                'no_kartu_bayi'  => DocNumber::next($patient->site_id, 'BB'),
+                'nama_bayi'      => $patient->name,
+                'jenis_kelamin'  => $patient->gender,
+                'tanggal_lahir'  => $patient->birth_date,
+                'status'         => 'hidup_sehat',
+                'created_by'     => $request->user()->id,
+            ]);
+
+            return redirect()->route('admin.child.show', $neonate)
+                ->with('flash', Flash::ok("Anak <b>{$patient->name}</b> terdaftar dengan No. Kartu <b>{$neonate->no_kartu_bayi}</b>."));
+        }
+
+        // Tidak ada patient_id → tampilkan picker
+        return view('admin.child.create');
+    }
+
     /* ============================== SHOW ============================== */
     public function show(Neonate $child): View
     {
         $child->load(['patient', 'delivery', 'immunizations.immunizationType', 'immunizations.givenBy', 'childVisits.servedBy']);
 
-        // Build matrix imunisasi (type × dose)
+        // Build matrix imunisasi (type × dose I-V) — petugas yang tentukan dose ke berapa
         $allTypes = ImmunizationType::active()->orderBy('sort_order')->get();
         $matrix = [];
         foreach ($allTypes as $type) {
@@ -60,7 +105,7 @@ class ChildController extends Controller
                 'type'  => $type,
                 'doses' => [],
             ];
-            for ($d = 1; $d <= $type->max_dose; $d++) {
+            for ($d = 1; $d <= 5; $d++) {
                 $matrix[$type->id]['doses'][$d] = $child->immunizations
                     ->where('immunization_type_id', $type->id)
                     ->where('dose_number', $d)

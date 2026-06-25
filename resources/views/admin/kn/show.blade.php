@@ -28,9 +28,11 @@
                         <i class="ki-outline ki-pencil fs-3"></i> Edit Data Bayi
                     </a>
                 @endif
-                <a href="{{ route('admin.inc.show', $neonate->delivery) }}" class="btn btn-sm btn-light-info w-100 mt-2">
-                    <i class="ki-outline ki-pulse fs-3"></i> Lihat Persalinan
-                </a>
+                @if($neonate->delivery)
+                    <a href="{{ route('admin.inc.show', $neonate->delivery) }}" class="btn btn-sm btn-light-info w-100 mt-2">
+                        <i class="ki-outline ki-pulse fs-3"></i> Lihat Persalinan
+                    </a>
+                @endif
                 @if(auth()->user()->hasPermission('child.view'))
                     <a href="{{ route('admin.child.show', $neonate) }}" class="btn btn-sm btn-info w-100 mt-2">
                         <i class="ki-outline ki-syringe fs-3"></i> Imunisasi & KMS

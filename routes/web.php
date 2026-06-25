@@ -153,6 +153,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // ===== Pelayanan Bayi/Anak (Imunisasi + Tumbuh Kembang) =====
         Route::middleware('permission:child.view')->group(function () {
             Route::get('/child',                  [ChildController::class, 'index'])->name('child.index');
+            Route::get('/child/create',           [ChildController::class, 'create'])->name('child.create');
             Route::get('/child/{child}',          [ChildController::class, 'show'])->whereNumber('child')->name('child.show');
             Route::post('/child/{child}/immunization', [ChildController::class, 'storeImmunization'])->whereNumber('child')->name('child.immunization.store');
             Route::delete('/child/immunization/{record}', [ChildController::class, 'destroyImmunization'])->whereNumber('record')->name('child.immunization.destroy');

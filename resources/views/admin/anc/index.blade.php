@@ -71,6 +71,7 @@
                         <th>HPHT</th>
                         <th>HPL</th>
                         <th>UK (Sekarang)</th>
+                        <th>Kunjungan Berikutnya</th>
                         <th>Status</th>
                         <th class="text-end pe-4">Aksi</th>
                     </tr>
@@ -98,6 +99,24 @@
                                     @endif
                                 @else - @endif
                             </td>
+                            <td>
+                                @php
+                                    $next = $p->next_visit_date ? \Carbon\Carbon::parse($p->next_visit_date) : null;
+                                    if ($next) {
+                                        $diff = (int) today()->diffInDays($next, false);
+                                        if ($diff < 0)      { $nColor = 'danger';  $nLabel = abs($diff) . ' hari lewat'; }
+                                        elseif ($diff === 0){ $nColor = 'warning'; $nLabel = 'Hari ini'; }
+                                        elseif ($diff <= 3) { $nColor = 'warning'; $nLabel = $diff . ' hari lagi'; }
+                                        else                { $nColor = 'success'; $nLabel = $diff . ' hari lagi'; }
+                                    }
+                                @endphp
+                                @if($next)
+                                    <div class="fw-semibold text-{{ $nColor }}">{{ $next->isoFormat('D MMM YY') }}</div>
+                                    <div class="text-muted fs-8">{{ $nLabel }}</div>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
                             <td><span class="badge badge-light-{{ $p->status_color }}">{{ $p->status_label }}</span></td>
                             <td class="text-end pe-4">
                                 <a href="{{ route('admin.anc.show', $p) }}" class="btn btn-sm btn-icon btn-light-info" title="Detail">
@@ -109,7 +128,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="text-center text-muted py-10">Belum ada data kehamilan.</td></tr>
+                        <tr><td colspan="10" class="text-center text-muted py-10">Belum ada data kehamilan.</td></tr>
                     @endforelse
                 </tbody>
             </table>

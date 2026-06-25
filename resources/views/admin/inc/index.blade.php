@@ -22,6 +22,9 @@
                 <option value="">Semua Status</option>
                 @foreach($statuses as $code => $s)<option value="{{ $code }}" @selected(request('status')===$code)>{{ $s['label'] }}</option>@endforeach
             </select>
+            <a href="{{ route('admin.inc.create') }}" class="btn btn-sm btn-primary">
+                <i class="ki-outline ki-plus fs-3"></i> Tambah Persalinan
+            </a>
         </div>
     </div>
     <div class="card-body py-4">

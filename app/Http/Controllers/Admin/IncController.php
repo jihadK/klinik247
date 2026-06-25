@@ -9,6 +9,7 @@ use App\Http\Requests\Inc\StoreSoapRequest;
 use App\Http\Requests\Inc\UpdateDeliveryRequest;
 use App\Models\Delivery;
 use App\Models\DeliverySoap;
+use App\Models\Patient;
 use App\Models\PatientVisit;
 use App\Models\Pregnancy;
 use App\Support\DocNumber;
@@ -43,20 +44,65 @@ class IncController extends Controller
     {
         $pregnancy = null;
         $visit     = null;
+        $patient   = null;
 
+        // 1. Resolve via pregnancy_id
         if ($request->filled('pregnancy_id')) {
             $pregnancy = Pregnancy::with('patient')->find($request->input('pregnancy_id'));
         }
-        if ($request->filled('visit_id')) {
+
+        // 2. Resolve via visit_id
+        if (! $pregnancy && $request->filled('visit_id')) {
             $visit = PatientVisit::with('patient')->find($request->input('visit_id'));
-            if (! $pregnancy) {
-                $pregnancy = Pregnancy::aktif()->where('patient_id', $visit?->patient_id)->first();
+            if ($visit) {
+                $pregnancy = Pregnancy::aktif()->where('patient_id', $visit->patient_id)->first();
+                $patient   = $visit->patient;
             }
         }
 
+        // 3. Resolve via patient_id (walk-in delivery — pasien datang langsung)
+        if (! $pregnancy && $request->filled('patient_id')) {
+            $patient = Patient::find($request->input('patient_id'));
+            if (! $patient) {
+                return redirect()->route('admin.inc.create')
+                    ->with('flash', Flash::err('Pasien tidak ditemukan.'));
+            }
+            if ($patient->gender !== 'P') {
+                return redirect()->route('admin.inc.create')
+                    ->with('flash', Flash::err("Pasien <b>{$patient->name}</b> bukan perempuan, tidak bisa daftar persalinan."));
+            }
+
+            // Cek kehamilan aktif → kalau ada pakai itu
+            $pregnancy = Pregnancy::aktif()->where('patient_id', $patient->id)->first();
+
+            // Walk-in: belum ada catatan ANC → auto-create kehamilan minimal
+            if (! $pregnancy) {
+                $pregnancy = Pregnancy::create([
+                    'site_id'         => $patient->site_id,
+                    'patient_id'      => $patient->id,
+                    'no_kartu_hamil'  => DocNumber::next($patient->site_id, 'MH'),
+                    'gravida'         => 1,
+                    'partus'          => 0,
+                    'abortus'         => 0,
+                    'hamil_ke'        => 1,
+                    'tanggal_k1'      => today(),
+                    'status'          => Pregnancy::STATUS_AKTIF,
+                    'created_by'      => $request->user()->id,
+                ]);
+            }
+        }
+
+        // 4. Tidak ada referensi → tampilkan picker
         if (! $pregnancy) {
-            return redirect()->route('admin.anc.index')
-                ->with('flash', Flash::err('Kehamilan tidak ditemukan. Akses persalinan via detail kehamilan.'));
+            return view('admin.inc.create', [
+                'delivery'  => new Delivery(),
+                'pregnancy' => null,
+                'patient'   => null,
+                'visit'     => null,
+                'penapisan' => Delivery::penapisanItems(),
+                'ketubanOptions'   => Delivery::ketubanOptions(),
+                'keputusanOptions' => Delivery::keputusanPenapisanOptions(),
+            ]);
         }
 
         if ($pregnancy->status !== Pregnancy::STATUS_AKTIF) {
@@ -77,6 +123,7 @@ class IncController extends Controller
                 'masuk_at'   => now()->format('Y-m-d H:i'),
             ]),
             'pregnancy'  => $pregnancy,
+            'patient'    => $pregnancy->patient,
             'visit'      => $visit,
             'penapisan'  => Delivery::penapisanItems(),
             'ketubanOptions'   => Delivery::ketubanOptions(),
